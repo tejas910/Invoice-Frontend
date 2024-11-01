@@ -5,7 +5,7 @@ import * as XLSX from 'xlsx';
 import axios from 'axios';
 
 
-export default function InvoicePage() {
+const  InvoicePage = () => {
   const [invoices, setInvoices] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
@@ -196,3 +196,4 @@ export default function InvoicePage() {
     </div>
   );
 }
+export default InvoicePage
