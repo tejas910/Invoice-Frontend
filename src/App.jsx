@@ -27,6 +27,10 @@ import DisplayTaxPage from './pages/DisplayTaxPage';
 import Profile from './pages/Profile';
 import ExportPage from './pages/ExportPage';
 import Invoice from './components/Invoice';
+import Quotes from './pages/Quotes';
+import AddQuotesPage from './pages/AddQuotesPage';
+import { Quote } from 'lucide-react';
+import QuotePdf from './components/QuotePdf';
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -44,9 +48,11 @@ function App() {
           <Route element={<UserPrivateRoute />}>
             <Route path='/' element={<Home />} />
             <Route path='/invoice' element={<InvoicePage />} />
+            <Route path='/quotes' element={<Quotes/>}/>
             <Route path='/setting' element={<Setting />} />
             <Route path='/product' element={<Product />} />
             <Route path='/addinvoice' element={<AddInvoicePage />} />
+            <Route path='/quotes/addquotes' element={<AddQuotesPage/>}/>
             <Route path='/client' element={<Customer />} />
             <Route path='/client/displayclient/:id' element={<DisplayClientPage/>}/>
             <Route path='/addproduct' element={<AddProductPage />} />
@@ -63,6 +69,7 @@ function App() {
             <Route path='/profile' element={<Profile/>}/>
             <Route path='/invoice/:invoiceId' element={<Invoice/>}/>
             <Route path='/exportsheet' element={<ExportPage/>}/>
+            <Route path='/quotes/:quotesId' element={<QuotePdf/>}/>
           </Route>
 
           <Route element={<UserPublicRoute />}>

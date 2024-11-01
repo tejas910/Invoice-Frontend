@@ -4,14 +4,14 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 
-export default function InvoiceComponent() {
+export default function AddQuotesPage() {
   const navigate = useNavigate();
   const invNumber = (Math.floor(Math.random()*100))
-  const [invoice, setInvoice] = useState({
-    invoiceNumber: `INV${invNumber}`,
-    invoiceDate: "",
-    invoiceDueDate: "",
-    status: "Pending",
+  const [quote, setQuote] = useState({
+    quoteNumber: `QUO${invNumber}`,
+    quoteDate: "",
+    quoteDueDate: "",
+    status: "Draft",
     subTotal: 0,
     totalTax: 0,
     discount: 0,
@@ -19,9 +19,9 @@ export default function InvoiceComponent() {
     notes: "",
     clientId: "",
     shippingAddressId: "",
-    invoiceItems: [],
+    quoteItems: [],
   });
-  const [invoiceItems, setInvoiceItems] = useState([
+  const [quoteItems, setQuoteItems] = useState([
     {
       productName: "",
       hsnCode: "",
@@ -120,7 +120,7 @@ export default function InvoiceComponent() {
   };
 
   const handleClientChange = (event) => {
-    setInvoice((prev) => ({
+    setQuote((prev) => ({
       ...prev,
       clientId: event.target.value,
     }));
@@ -128,7 +128,7 @@ export default function InvoiceComponent() {
   };
 
   const handleAddressChange = (event) => {
-    setInvoice((prev) => ({
+    setQuote((prev) => ({
       ...prev,
       shippingAddressId: event.target.value,
     }));
@@ -138,25 +138,25 @@ export default function InvoiceComponent() {
     const { value, name } = event.target;
 
     // Check if the field is a date input
-    if (name === "invoiceDate" || name === "invoiceDueDate") {
+    if (name === "quoteDate" || name === "quoteDueDate") {
       // Create a DateTime string (you can adjust the time as needed)
       const dateTimeString = new Date(`${value}T00:00:00`).toISOString();
-      setInvoice((prev) => ({
+      setQuote((prev) => ({
         ...prev,
         [name]: dateTimeString, // Store the complete DateTime
       }));
     } else if (name === "discount") {
-      const total = invoiceItems.reduce(
+      const total = quoteItems.reduce(
         (acc, item) => acc + item.totalPrice,
         0
       );
-      setInvoice((prev) => ({
+      setQuote((prev) => ({
         ...prev,
         discount: Number(value),
         total: total - Number(value),
       }));
     } else {
-      setInvoice((prev) => ({
+      setQuote((prev) => ({
         ...prev,
         [name]: value,
       }));
@@ -166,7 +166,7 @@ export default function InvoiceComponent() {
   const handleInvoiceItemsChanges = (event, index) => {
     const { value, name } = event.target;
 
-    setInvoiceItems((prevItems) => {
+    setQuoteItems((prevItems) => {
       const updatedItems = [...prevItems];
       const newQuantity =
         name === "quantity"
@@ -206,9 +206,9 @@ export default function InvoiceComponent() {
         };
       }
 
-      setInvoice((prev) => ({
+      setQuote((prev) => ({
         ...prev,
-        invoiceItems: updatedItems,
+        quoteItems: updatedItems,
       }));
       // Return the updated items array
       return updatedItems;
@@ -219,14 +219,14 @@ export default function InvoiceComponent() {
   };
 
   const calculations = () => {
-    setInvoiceItems((prevItems) => {
+    setQuoteItems((prevItems) => {
       const subTotal = prevItems.reduce((acc, item) => acc + item.subTotal, 0);
       const totalTax = prevItems.reduce(
         (acc, item) => acc + item.taxableAmount,
         0
       );
       const total = prevItems.reduce((acc, item) => acc + item.totalPrice, 0);
-      setInvoice((prev) => ({
+      setQuote((prev) => ({
         ...prev,
         subTotal: subTotal,
         totalTax: totalTax,
@@ -238,7 +238,7 @@ export default function InvoiceComponent() {
   };
 
   const addInvoiceItem = () => {
-    setInvoiceItems((prevItems) => [
+    setQuoteItems((prevItems) => [
       ...prevItems,
       {
         productId: "",
@@ -256,7 +256,7 @@ export default function InvoiceComponent() {
   };
 
   const removeInvoiceItem = (index) => {
-    setInvoiceItems((prevItems) => {
+    setQuoteItems((prevItems) => {
       if (prevItems.length > 1) {
         const updatedItems = prevItems.filter((_, i) => i !== index);
         const subTotal = updatedItems.reduce(
@@ -271,7 +271,7 @@ export default function InvoiceComponent() {
           (acc, item) => acc + item.totalPrice,
           0
         );
-        setInvoice((prev) => ({
+        setQuote((prev) => ({
           ...prev,
           subTotal: subTotal,
           totalTax: totalTax,
@@ -287,14 +287,14 @@ export default function InvoiceComponent() {
   const handleOnSubmit = async (event) => {
     event.preventDefault();
     // Validate required fields
-    if (!invoice.clientId || !invoice.invoiceNumber || !invoice.invoiceDate || !invoice.shippingAddressId) {
+    if (!quote.clientId || !quote.quoteNumber || !quote.quoteDate || !quote.shippingAddressId) {
         alert("Please fill out all required fields.");
         return;
     }
     try {
         const response = await axios.post(
-            "http://localhost:3000/api/invoices",
-            invoice,
+            "http://localhost:3000/api/quotes",
+            quote,
             {
                 headers: {
                     Authorization: `Bearer ${JSON.parse(localStorage.getItem("accesstoken"))}`,
@@ -303,12 +303,12 @@ export default function InvoiceComponent() {
         );
         if (response.status === 200) {
             console.log(response.data);
-            alert("Invoice submitted")
-            navigate("/invoice")
+            alert("Quotes submitted")
+            navigate("/quotes")
         }
     } catch (error) {
-        alert("Please check you have submit data properly...",error.response.data)
-        console.error(error.response.data);
+        alert("Please check you have submit data properly...",error.response)
+        console.error(error.response);
     }
 };
 
@@ -319,7 +319,7 @@ export default function InvoiceComponent() {
 
   return (
     <div className="w-full max-w-4xl mx-auto p-6 bg-white shadow-md rounded-lg">
-      <h2 className="text-2xl font-semibold mb-4">New Invoice</h2>
+      <h2 className="text-2xl font-semibold mb-4">New Quote</h2>
       <form
         onSubmit={(event) => {
           handleOnSubmit(event);
@@ -332,7 +332,7 @@ export default function InvoiceComponent() {
             </label>
             <select
               name="clientId"
-              value={invoice.clientId}
+              value={quote.clientId}
               onChange={handleClientChange}
               className="w-full p-2 border border-gray-300 rounded"
             >
@@ -345,38 +345,38 @@ export default function InvoiceComponent() {
             </select>
           </div>
           <div>
-            <label htmlFor="invoiceNumber" className="block mb-1">
-              Invoice #*
+            <label htmlFor="quoteNumber" className="block mb-1">
+              Quote #*
             </label>
             <input
-              name="invoiceNumber"
-              value={invoice.invoiceNumber}
+              name="quoteNumber"
+              value={quote.quoteNumber}
               onChange={handleInvoiceChanges}
               className="w-full p-2 border border-gray-300 rounded"
               type="text"
             />
           </div>
           <div>
-            <label htmlFor="invoiceDate" className="block mb-1">
-              Invoice Date*
+            <label htmlFor="quoteDate" className="block mb-1">
+              Quote Date*
             </label>
             <input
               type="date"
-              name="invoiceDate"
-              value={invoice.invoiceDate.split("T")[0]}
+              name="quoteDate"
+              value={quote.quoteDate.split("T")[0]}
               onChange={handleInvoiceChanges}
               className="w-full p-2 border border-gray-300 rounded"
               required
             />
           </div>
           <div>
-            <label htmlFor="invoiceDueDate" className="block mb-1">
+            <label htmlFor="quoteDueDate" className="block mb-1">
               Due Date*
             </label>
             <input
               type="date"
-              name="invoiceDueDate"
-              value={invoice.invoiceDueDate.split("T")[0]}
+              name="quoteDueDate"
+              value={quote.quoteDueDate.split("T")[0]}
               onChange={handleInvoiceChanges}
               className="w-full p-2 border border-gray-300 rounded"
               required
@@ -391,7 +391,7 @@ export default function InvoiceComponent() {
             </label>
             <select
               name="shippingAddressId"
-              value={invoice.shippingAddressId}
+              value={quote.shippingAddressId}
               onChange={handleAddressChange}
               className="w-full p-2 border border-gray-300 rounded"
             >
@@ -409,13 +409,14 @@ export default function InvoiceComponent() {
             </label>
             <select
               name="status"
-              value={invoice.status}
+              value={quote.status}
               onChange={handleInvoiceChanges}
               className="w-full p-2 border border-gray-300 rounded"
             >
-              <option value="Pending">Pending</option>
-              <option value="Paid">Paid</option>
-              <option value="Partially_Paid">Partially Paid</option>
+              <option value="Draft">Draft</option>
+              <option value="Accepted">Accepted</option>
+              <option value="Declined">Declined</option>
+              <option value="Converted_To_Invoice">Converted To Invoice</option>
             </select>
           </div>
         </div>
@@ -426,7 +427,7 @@ export default function InvoiceComponent() {
           </label>
           <textarea
             name="notes"
-            value={invoice.notes}
+            value={quote.notes}
             onChange={handleInvoiceChanges}
             className="w-full p-2 border border-gray-300 rounded"
             rows="2"
@@ -434,8 +435,8 @@ export default function InvoiceComponent() {
         </div>
 
         <div>
-          <h3 className="text-xl font-semibold mb-4">Invoice Items</h3>
-          {invoiceItems.map((item, index) => (
+          <h3 className="text-xl font-semibold mb-4">Quote Items</h3>
+          {quoteItems.map((item, index) => (
             <div
               key={index}
               className="grid grid-cols-6 gap-4 items-center mb-4"
@@ -581,7 +582,7 @@ export default function InvoiceComponent() {
                     type="number"
                     id="discount-input"
                     name="discount"
-                    value={invoice.discount}
+                    value={quote.discount}
                     onChange={handleInvoiceChanges}
                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5"
                     placeholder="Enter discount amount"
@@ -592,7 +593,7 @@ export default function InvoiceComponent() {
                     type="submit"
                     className="bg-blue-600 text-white w-32 h-11 rounded hover:bg-blue-700 transition-colors duration-200"
                   >
-                    Save Invoice
+                    Save Quotes
                   </button>
 
                   <button
@@ -610,25 +611,25 @@ export default function InvoiceComponent() {
             <div className="col-span-6">
               <div className="bg-white border border-gray-300 rounded-lg p-4 shadow-sm">
                 <h4 className="text-lg font-semibold text-gray-800 mb-3">
-                  Invoice Summary
+                  Quote Summary
                 </h4>
                 <div className="text-gray-700 space-y-2">
                   <div className="flex justify-between">
                     <span className="font-medium">Sub Total:</span>
-                    <span>{invoice.subTotal} Rs</span>
+                    <span>{quote.subTotal} Rs</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="font-medium">Total Tax:</span>
-                    <span>{invoice.totalTax} Rs</span>
+                    <span>{quote.totalTax} Rs</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="font-medium">Discount:</span>
-                    <span>{invoice.discount} Rs</span>
+                    <span>{quote.discount} Rs</span>
                   </div>
                   <hr className="my-2 border-gray-200" />
                   <div className="flex justify-between text-gray-800 font-bold text-lg">
-                    <span>Invoice Total:</span>
-                    <span>{invoice.total} Rs</span>
+                    <span>Quote Total:</span>
+                    <span>{quote.total} Rs</span>
                   </div>
                 </div>
               </div>

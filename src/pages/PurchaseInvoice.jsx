@@ -1,17 +1,13 @@
-import React, { useState } from 'react';
-import { Search, Plus, Edit, Trash2, ChevronDown } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Search, Plus, Edit, Trash2, ChevronDown, Car } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
-// Mock data for initial purchase invoices
-const initialInvoices = [
-  { id: '1', productName: 'Laptop', sellerName: 'Tech Store', invoiceNumber: 'INV001', priceOfEachItem: 50000, totalCost: 50000, purchaseDate: '2024-01-15', quantity: 1 },
-  { id: '2', productName: 'Monitor', sellerName: 'Display Shop', invoiceNumber: 'INV002', priceOfEachItem: 15000, totalCost: 30000, purchaseDate: '2024-01-18', quantity: 2 },
-  { id: '3', productName: 'Keyboard', sellerName: 'Peripherals Inc.', invoiceNumber: 'INV003', priceOfEachItem: 1200, totalCost: 1200, purchaseDate: '2024-01-20', quantity: 1 },
-  // Add more invoices as needed
-];
+import { parseISO } from 'date-fns';
+
 
 export default function PurchaseInvoice() {
-  const [invoices, setInvoices] = useState(initialInvoices);
+  const [invoices, setInvoices] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [resultsPerPage, setResultsPerPage] = useState(5);
@@ -19,26 +15,45 @@ export default function PurchaseInvoice() {
   const navigate = useNavigate();
 
   const filteredInvoices = invoices
-    .filter(invoice =>
-      invoice.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      invoice.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-    .sort((a, b) => {
-      if (sortOrder === 'asc') {
-        return a.productName.localeCompare(b.productName);
-      } else {
-        return b.productName.localeCompare(a.productName);
-      }
-    });
-
+  .filter(invoice =>
+    (invoice.productName && invoice.productName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (invoice.invoiceNumber && invoice.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()))
+  )
+  .sort((a, b) => {
+    if (sortOrder === 'asc') {
+      return (a.productName || "").localeCompare(b.productName || "");
+    } else {
+      return (b.productName || "").localeCompare(a.productName || "");
+    }
+  });
   const indexOfLastInvoice = currentPage * resultsPerPage;
   const indexOfFirstInvoice = indexOfLastInvoice - resultsPerPage;
   const currentInvoices = filteredInvoices.slice(indexOfFirstInvoice, indexOfLastInvoice);
-
+  const accesstoken = JSON.parse(localStorage.getItem('accesstoken'))
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
     setCurrentPage(1); // Reset to first page on new search
   };
+
+  const fetchPurchaseInvoice = async() =>{
+    try{
+      const res = await axios.get(`http://localhost:3000/api/purchase-invoices`,{headers:{
+        Authorization:`Bearer ${accesstoken}`
+      }})
+      if(res.status==200){
+        console.log(res.data)
+        setInvoices(res.data.result || [])
+      }
+    }catch(err){
+      if(axios.isAxiosError(err)){
+        console.log(err.response?.data.message)
+      }
+    }
+  }
+
+  useEffect(()=>{
+    fetchPurchaseInvoice();
+  },[])
 
   const handleAddInvoice = () => {
     navigate("/addpurchaseinvoice");
@@ -54,13 +69,11 @@ export default function PurchaseInvoice() {
     console.log('Delete invoice', id);
   };
 
-  const handleSort = () => {
-    setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-  };
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
+
 
   const totalPages = Math.ceil(filteredInvoices.length / resultsPerPage);
 
@@ -89,12 +102,12 @@ export default function PurchaseInvoice() {
         <table className="min-w-full bg-white">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 <div className="flex items-center cursor-pointer" onClick={handleSort}>
                   Product Name
                   {sortOrder === 'asc' ? ' 🔼' : ' 🔽'}
                 </div>
-              </th>
+              </th> */}
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Seller Name
               </th>
@@ -102,14 +115,14 @@ export default function PurchaseInvoice() {
                 Invoice Number
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Price Each
+                Total
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Quantity
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              </th> */}
+              {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Total Cost
-              </th>
+              </th> */}
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Purchase Date
               </th>
@@ -121,13 +134,13 @@ export default function PurchaseInvoice() {
           <tbody className="bg-white divide-y divide-gray-200">
             {currentInvoices.map((invoice) => (
               <tr key={invoice.id}>
-                <td className="px-6 py-4 whitespace-nowrap">{invoice.productName}</td>
+                {/* <td className="px-6 py-4 whitespace-nowrap">{invoice.productName}</td> */}
                 <td className="px-6 py-4 whitespace-nowrap">{invoice.sellerName}</td>
                 <td className="px-6 py-4 whitespace-nowrap">{invoice.invoiceNumber}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{invoice.priceOfEachItem.toFixed(2)} /-</td>
-                <td className="px-6 py-4 whitespace-nowrap">{invoice.quantity}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{invoice.totalCost.toFixed(2)} /-</td>
-                <td className="px-6 py-4 whitespace-nowrap">{new Date(invoice.purchaseDate).toLocaleDateString()}</td>
+                <td className="px-6 py-4 whitespace-nowrap">{invoice.total} /-</td>
+                {/* <td className="px-6 py-4 whitespace-nowrap">{invoice.quantity}</td> */}
+                {/* <td className="px-6 py-4 whitespace-nowrap">{invoice.totalCost.toFixed(2)} /-</td> */}
+                <td className="px-6 py-4 whitespace-nowrap">{invoice.invoiceDate}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                   <button
                     onClick={() => handleEditInvoice(invoice.id)}

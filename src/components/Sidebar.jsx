@@ -2,16 +2,20 @@ import React from 'react'
 import { Home, CreditCard, Package, Users, ShoppingCart, Settings, Menu,IndianRupee} from 'lucide-react'
 
 import { Link, useNavigate } from 'react-router-dom'
+import {  FaFileInvoice } from "react-icons/fa";
 
 const Sidebar = ({ sidebarOpen, toggleSidebar }) => {
     const navigate = useNavigate()
   const menuItems = [
     { icon: Home, label: 'Dashboard', path:'/'},
     { icon: CreditCard, label: 'Invoices', path:'/invoice'},
+    {icon: FaFileInvoice, label:'Quotes', path:'/quotes'},
     { icon: Package, label: 'Products',path:'/product' },
     { icon: Users, label: 'Customers', path:'/client'},
     { icon: IndianRupee, label: 'Taxes', path:'/taxes'},
+   
     { icon: ShoppingCart, label: 'Purchase Invoice', path:'/purchasein' },
+   
     { icon: Settings, label: 'Settings', path:'/setting'},
 
   ]

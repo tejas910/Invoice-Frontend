@@ -8,17 +8,17 @@ import { Summary } from "./Summary";
 import { Footer } from "./Footer";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
-function Invoice() {
-  const { invoiceId } = useParams();
-  console.log(invoiceId);
+function QuotePdf() {
+  const { quotesId } = useParams();
+  console.log(quotesId);
   const [invoiceData, setInvoiceData] = useState({});
   const [loading, setLoading] = useState(true);
   const invoiceRef = useRef();  // Reference to the component for PDF generation
 
-  const fetchInvoiceData = async (invoiceId) => {
+  const fetchInvoiceData = async (quotesId) => {
     try {
       const response = await axios.get(
-        `http://localhost:3000/api/invoices/${invoiceId}`,
+        `http://localhost:3000/api/quotes/${quotesId}`,
         {
           headers: {
             Authorization: `Bearer ${JSON.parse(localStorage.getItem("accesstoken"))}`,
@@ -26,7 +26,7 @@ function Invoice() {
         }
       );
       if (response.status === 200) {
-        setInvoiceData(response.data.result);
+        setInvoiceData(response.data.result.quote);
         setLoading(false);
       }
     } catch (error) {
@@ -35,8 +35,8 @@ function Invoice() {
   };
 
   useEffect(() => {
-    fetchInvoiceData(invoiceId);
-  }, [invoiceId]);
+    fetchInvoiceData(quotesId);
+  }, [quotesId]);
 
   const { invoice } = invoiceData;
 
@@ -83,4 +83,4 @@ function Invoice() {
   );
 }
 
-export default Invoice;
+export default QuotePdf;

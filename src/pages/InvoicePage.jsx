@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, ChevronDown, Download, MoreVertical, RefreshCw } from 'lucide-react';
+import { Search, ChevronDown, Download, MoreVertical, RefreshCw, Trash2, Edit2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import axios from 'axios';
@@ -11,6 +11,7 @@ export default function InvoicePage() {
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
   const accesstoken = JSON.parse(localStorage.getItem("accesstoken"))
+  const [statusUpdate,setStatusUpdate] = useState(false);
   const navigate = useNavigate();
   useEffect(() => {
     let filteredInvoices = [...invoices];
@@ -37,7 +38,7 @@ export default function InvoicePage() {
     }
     fetchInvoices()
     // setInvoices(3);
-  }, [searchTerm, dateRange, sortConfig]);
+  }, [searchTerm, dateRange, sortConfig,statusUpdate]);
 
 
   const fetchInvoices  = async() =>{
@@ -46,6 +47,24 @@ export default function InvoicePage() {
       if(res.status==200){
         console.log(res.data.result)
         setInvoices(res.data.result || [])
+      }
+    }catch(err){
+      if(axios.isAxiosError(err)){
+        console.log(err.response?.data.message)
+      }
+    }
+  }
+
+  const deleteInvoice = async(id) =>{
+    try{  
+      const res = await axios.delete(`http://localhost:3000/api/invoices/${id}`,{
+        headers:{
+          Authorization:`Bearer ${accesstoken}`
+        }
+      })
+      if(res.status==204){
+          setStatusUpdate(prev => !prev)
+          alert("invoice is deleted....")
       }
     }catch(err){
       if(axios.isAxiosError(err)){
@@ -135,7 +154,7 @@ export default function InvoicePage() {
 
             {invoices.map((invoice) => (
               <tr key={invoice.id}>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-6 py-4 whitespace-nowrap cursor-pointer">
                   <div className="flex items-center" onClick={()=>navigate(`/invoice/${invoice.id}`)}>
                     <div className="flex-shrink-0 h-10 w-10">
                       <img className="h-10 w-10 rounded-full" src={`https://ui-avatars.com/api/?name=${invoice.client.firstName}&background=random`} alt="" />
@@ -162,11 +181,11 @@ export default function InvoicePage() {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <button className="text-indigo-600 hover:text-indigo-900 mr-2">
-                    <Download className="h-5 w-5" />
+                  <button onClick={()=>deleteInvoice(invoice.id)} className="text-indigo-600 hover:text-indigo-900 mr-2">
+                    <Trash2 className="h-5 w-5" />
                   </button>
                   <button className="text-gray-600 hover:text-gray-900">
-                    <MoreVertical className="h-5 w-5" />
+                    <Edit2 className="h-5 w-5" />
                   </button>
                 </td>
               </tr>

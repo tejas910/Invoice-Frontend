@@ -1,6 +1,6 @@
-
 import { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 export default function AddPurchaseInvoice() {
   const [invoiceNumber, setInvoiceNumber] = useState('');
@@ -9,45 +9,38 @@ export default function AddPurchaseInvoice() {
   const [sellerAddress, setSellerAddress] = useState('ABC road, pune, 411048.');
   const [notes, setNotes] = useState('');
   const [discount, setDiscount] = useState(0);
-  const [invoiceItems, setInvoiceItems] = useState([{ productName: '', price: 0, quantity: 1, productDescription: '', hsnCode: '' }]);
+  const [subTotal, setSubTotal] = useState(0);
+  const [totalTax, setTotalTax] = useState(0);
+  const [total, setTotal] = useState(0);
+  const [invoiceItems, setInvoiceItems] = useState([{ productName: '', price: 0, quantity: 1, productDescription: '', hsnCode: '', totalPrice: 0, taxableAmount: 0, subTotal: 0 }]);
   const accesstoken = JSON.parse(localStorage.getItem("accesstoken"));
+  const navigate = useNavigate()
   const addItem = () => {
-    setInvoiceItems([...invoiceItems, { productName: '', price: 0, quantity: 1, productDescription: '', hsnCode: '' }]);
+    setInvoiceItems([...invoiceItems, { productName: '', price: 0, quantity: 1, productDescription: '', hsnCode: '', totalPrice: 0, taxableAmount: 0, subTotal: 0 }]);
   };
 
   const removeItem = (index) => {
     setInvoiceItems(invoiceItems.filter((_, i) => i !== index));
   };
 
-  const calculateSubtotal = () => {
-    return invoiceItems.reduce((total, item) => total + (item.price * item.quantity), 0);
-  };
-
-  const calculateTotalTax = () => {
-    // Example tax calculation (modify as needed)
-    const subtotal = calculateSubtotal();
-    const taxRate = 0.1; // 10% tax
-    return (subtotal * taxRate).toFixed(2);
-  };
-
-  const calculateTotal = () => {
-    const subtotal = Number(calculateSubtotal());
-    const tax = Number(calculateTotalTax());
-    return (subtotal + tax - discount)
+  const handleItemChange = (index, key, value) => {
+    const newItems = [...invoiceItems];
+    newItems[index][key] = value;
+    setInvoiceItems(newItems);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    const invoiceDateISO = new Date(invoiceDate).toISOString();
     const invoiceData = {
       invoiceNumber,
-      invoiceDate,
+      invoiceDate:invoiceDateISO,
       sellerName,
       sellerAddress,
-      total: Number(calculateTotal()),
-      subTotal: Number(calculateSubtotal()),
+      total: Number(total),
+      subTotal: Number(subTotal),
       discount,
-      totalTax: Number(calculateTotalTax()),
+      totalTax: Number(totalTax),
       notes,
       invoiceItems: invoiceItems.map(item => ({
         productName: item.productName,
@@ -55,19 +48,22 @@ export default function AddPurchaseInvoice() {
         hsnCode: item.hsnCode,
         price: Number(item.price),
         quantity: Number(item.quantity),
-        totalPrice: Number((item.price * item.quantity)),
-        subTotal: Number(item.price * item.quantity ), // example discount applied
-        taxableAmount: Number((item.price * item.quantity * 0.1)), // example tax calculation
+        totalPrice: Number(item.totalPrice),
+        taxableAmount: Number(item.taxableAmount),
+        subTotal: Number(item.subTotal),
       })),
     };
 
+
+    console.log(invoiceData);
+    
     try {
-      const response = await axios.post('http://localhost:3000/api/purchase-invoices', invoiceData, {headers:{Authorization:`Bearer ${accesstoken}`}});
-      if(response.status==200){
+      const response = await axios.post('http://localhost:3000/api/purchase-invoices', invoiceData, { headers: { Authorization: `Bearer ${accesstoken}` } });
+      if (response.status === 200) {
         console.log('Invoice saved:', response.data);
+        navigate('/purchasein')
         alert('Invoice submitted successfully!');
       }
-      // Optionally, you can generate a PDF here
     } catch (error) {
       console.error('Error submitting invoice:', error);
       alert('Failed to submit invoice. Please try again.');
@@ -147,6 +143,8 @@ export default function AddPurchaseInvoice() {
               <th className="text-left border border-gray-300 p-2">Qty</th>
               <th className="text-left border border-gray-300 p-2">Unit Price</th>
               <th className="text-left border border-gray-300 p-2">Total Price</th>
+              <th className="text-left border border-gray-300 p-2">Taxable Amount</th>
+              <th className="text-left border border-gray-300 p-2">Sub Total</th>
               <th className="text-left border border-gray-300 p-2">Action</th>
             </tr>
           </thead>
@@ -158,11 +156,7 @@ export default function AddPurchaseInvoice() {
                   <input
                     type="text"
                     value={item.productName}
-                    onChange={(e) => {
-                      const newItems = [...invoiceItems];
-                      newItems[index].productName = e.target.value;
-                      setInvoiceItems(newItems);
-                    }}
+                    onChange={(e) => handleItemChange(index, 'productName', e.target.value)}
                     className="w-full p-2 border border-gray-300 rounded"
                     required
                   />
@@ -171,11 +165,7 @@ export default function AddPurchaseInvoice() {
                   <input
                     type="text"
                     value={item.productDescription}
-                    onChange={(e) => {
-                      const newItems = [...invoiceItems];
-                      newItems[index].productDescription = e.target.value;
-                      setInvoiceItems(newItems);
-                    }}
+                    onChange={(e) => handleItemChange(index, 'productDescription', e.target.value)}
                     className="w-full p-2 border border-gray-300 rounded"
                   />
                 </td>
@@ -183,11 +173,7 @@ export default function AddPurchaseInvoice() {
                   <input
                     type="text"
                     value={item.hsnCode}
-                    onChange={(e) => {
-                      const newItems = [...invoiceItems];
-                      newItems[index].hsnCode = e.target.value;
-                      setInvoiceItems(newItems);
-                    }}
+                    onChange={(e) => handleItemChange(index, 'hsnCode', e.target.value)}
                     className="w-full p-2 border border-gray-300 rounded"
                   />
                 </td>
@@ -195,11 +181,7 @@ export default function AddPurchaseInvoice() {
                   <input
                     type="number"
                     value={item.quantity}
-                    onChange={(e) => {
-                      const newItems = [...invoiceItems];
-                      newItems[index].quantity = Math.max(1, e.target.value);
-                      setInvoiceItems(newItems);
-                    }}
+                    onChange={(e) => handleItemChange(index, 'quantity', Math.max(1, e.target.value))}
                     className="w-full p-2 border border-gray-300 rounded"
                     required
                   />
@@ -208,11 +190,7 @@ export default function AddPurchaseInvoice() {
                   <input
                     type="number"
                     value={item.price}
-                    onChange={(e) => {
-                      const newItems = [...invoiceItems];
-                      newItems[index].price = Math.max(0, e.target.value);
-                      setInvoiceItems(newItems);
-                    }}
+                    onChange={(e) => handleItemChange(index, 'price', Math.max(0, e.target.value))}
                     className="w-full p-2 border border-gray-300 rounded"
                     required
                   />
@@ -220,9 +198,25 @@ export default function AddPurchaseInvoice() {
                 <td className="border border-gray-300 p-2">
                   <input
                     type="number"
-                    value={(item.price * item.quantity).toFixed(2)}
-                    readOnly
-                    className="w-full p-2 border border-gray-300 rounded bg-gray-100"
+                    value={item.totalPrice}
+                    onChange={(e) => handleItemChange(index, 'totalPrice', e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded"
+                  />
+                </td>
+                <td className="border border-gray-300 p-2">
+                  <input
+                    type="number"
+                    value={item.taxableAmount}
+                    onChange={(e) => handleItemChange(index, 'taxableAmount', e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded"
+                  />
+                </td>
+                <td className="border border-gray-300 p-2">
+                  <input
+                    type="number"
+                    value={item.subTotal}
+                    onChange={(e) => handleItemChange(index, 'subTotal', e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded"
                   />
                 </td>
                 <td className="border border-gray-300 p-2">
@@ -243,12 +237,37 @@ export default function AddPurchaseInvoice() {
           Add Item
         </button>
 
-        <div className="flex justify-between mt-4">
+        <div className="grid grid-cols-2 gap-4 mb-4">
           <div>
-            <p className="font-semibold">Subtotal: {calculateSubtotal()}</p>
-            <p className="font-semibold">Total Tax: {calculateTotalTax()}</p>
-            <p className="font-semibold">Total: {calculateTotal()}</p>
+            <label className="block mb-1">Sub Total</label>
+            <input
+              type="number"
+              value={subTotal}
+              onChange={(e) => setSubTotal(Number(e.target.value))}
+              className="w-full p-2 border border-gray-300 rounded"
+            />
           </div>
+          <div>
+            <label className="block mb-1">Total Tax</label>
+            <input
+              type="number"
+              value={totalTax}
+              onChange={(e) => setTotalTax(Number(e.target.value))}
+              className="w-full p-2 border border-gray-300 rounded"
+            />
+          </div>
+          <div>
+            <label className="block mb-1">Total</label>
+            <input
+              type="number"
+              value={total}
+              onChange={(e) => setTotal(Number(e.target.value))}
+              className="w-full p-2 border border-gray-300 rounded"
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-between mt-4">
           <button type="submit" className="bg-green-500 text-white p-1 rounded">Submit Invoice</button>
         </div>
       </form>

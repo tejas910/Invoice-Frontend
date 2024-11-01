@@ -1,4 +1,5 @@
-import React from 'react';
+import axios from 'axios';
+import React, { useEffect } from 'react';
 
 const sampleData = {
   companyName: 'Sample Company Ltd.',
@@ -22,7 +23,31 @@ const sampleData = {
   companyStamp: 'https://via.placeholder.com/150'
 };
 
+
 const Profile = () => {
+  const accesstoken = JSON.parse(localStorage.getItem('accesstoken'));
+      const fetchDetails = async() =>{  
+
+          try{
+            const res = await axios.get(`http://localhost:3000/api/users`,
+              {
+                headers:{
+                  Authorization:`Bearer ${accesstoken}`
+                }
+              }
+            )
+            if(res.status==200){
+              console.log(res.data)
+            }
+          }catch(err){
+            if(axios.isAxiosError(err)){
+              console.log(err.response?.data.message)
+            }
+          }
+      }
+      useEffect(()=>{
+        fetchDetails();
+      },[])
   return (
     <div className="container mx-auto p-4 sm:p-6 bg-gray-50">
       <h1 className="text-2xl font-bold mb-6">Profile Information</h1>
