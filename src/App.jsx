@@ -31,6 +31,7 @@ import Quotes from './pages/quotes/Quotes';
 import AddQuotesPage from './pages/quotes/AddQuotesPage';
 import { Quote } from 'lucide-react';
 import QuotePdf from './components/QuotePdf';
+import UpdateInvoicePage from './pages/invoices/UpdateInvoicePage';
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -70,6 +71,7 @@ function App() {
             <Route path='/invoice/:invoiceId' element={<Invoice/>}/>
             <Route path='/exportsheet' element={<ExportPage/>}/>
             <Route path='/quotes/:quotesId' element={<QuotePdf/>}/>
+            <Route path='/invoice/updateinvoice/:invoiceId' element={<UpdateInvoicePage/>}/>
           </Route>
 
           <Route element={<UserPublicRoute />}>

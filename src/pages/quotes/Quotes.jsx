@@ -12,10 +12,12 @@ export default function Quotes() {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(true); // Loading state
   const accesstoken = JSON.parse(localStorage.getItem("accesstoken"));
   const navigate = useNavigate();
 
   const fetchQuotes = async (page = 1, limit = 10) => {
+    setLoading(true);
     try {
       const res = await axios.get(`http://localhost:3000/api/quotes?page=${page}&limit=${limit}`, {
         headers: { Authorization: `Bearer ${accesstoken}` }
@@ -23,12 +25,14 @@ export default function Quotes() {
       if (res.status === 200) {
         const newQuotes = res.data.result || [];
         setQuotes(prev => page === 1 ? newQuotes : [...prev, ...newQuotes]);
-        setHasMore(newQuotes.length === limit);  // If fetched quotes are less than limit, no more data
+        setHasMore(newQuotes.length === limit);
       }
     } catch (err) {
       if (axios.isAxiosError(err)) {
         console.log(err.response?.data.message);
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -38,7 +42,7 @@ export default function Quotes() {
 
   const debouncedFetchQuotes = useCallback(
     debounce(() => {
-      setPage(1);  // Reset to page 1 on new search or sort
+      setPage(1);
       fetchQuotes(1);
     }, 300),
     [searchTerm, dateRange, sortConfig]
@@ -55,8 +59,7 @@ export default function Quotes() {
         headers: { Authorization: `Bearer ${accesstoken}` }
       });
       if (res.status === 204) {
-        setQuotes(prev => prev.filter(quote => quote.id !== id));
-        alert("Quote deleted successfully.");
+        setQuotes((prev) => prev.filter((quote) => quote.id !== id));
       }
     } catch (err) {
       if (axios.isAxiosError(err)) {
@@ -66,9 +69,9 @@ export default function Quotes() {
   };
 
   const handleSort = (key) => {
-    setSortConfig(prevConfig => ({
+    setSortConfig((prevConfig) => ({
       key,
-      direction: prevConfig.key === key && prevConfig.direction === 'ascending' ? 'descending' : 'ascending'
+      direction: prevConfig.key === key && prevConfig.direction === 'ascending' ? 'descending' : 'ascending',
     }));
   };
 
@@ -118,72 +121,60 @@ export default function Quotes() {
         </div>
       </div>
 
-      <div className="bg-white shadow-md rounded-lg overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('client')}>
-                Client <ChevronDown className="inline h-4 w-4" />
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('quoteDate')}>
-                Quote Date <ChevronDown className="inline h-4 w-4" />
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('quoteDueDate')}>
-                Due Date <ChevronDown className="inline h-4 w-4" />
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Action
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {quotes.map((quote) => (
-              <tr key={quote.id}>
-                <td className="px-6 py-4 whitespace-nowrap" onClick={() => navigate(`/quotes/${quote.id}`)}>
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0 h-10 w-10">
-                      <img loading="lazy" className="h-10 w-10 rounded-full" src={`https://ui-avatars.com/api/?name=${quote.client.firstName}&background=random`} alt="" />
-                    </div>  
-                    <div className="ml-4">
-                      <div className="text-sm font-medium text-gray-900">{quote.client.firstName} {quote.client.lastName}</div>
-                      <div className="text-sm text-gray-500">{quote.client.email}</div>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{new Date(quote.quoteDate).toLocaleDateString()}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{new Date(quote.quoteDueDate).toLocaleDateString()}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${quote.status === 'Accepted' ? 'bg-green-100 text-green-800' : quote.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'}`}>
-                    {quote.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <button onClick={() => deleteQuote(quote.id)} className="text-indigo-600 hover:text-indigo-900 mr-2">
-                    <Trash2 className="h-5 w-5" />
-                  </button>
-                  <button className="text-gray-600 hover:text-gray-900">
-                    <Edit2 className="h-5 w-5" />
-                  </button>
-                </td>
+      {loading ? (
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500"></div>
+        </div>
+      ) : (
+        <div className="bg-white shadow-md rounded-lg overflow-hidden">
+          <table className="w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th onClick={() => handleSort('client')}>Client <ChevronDown className="inline h-4 w-4" /></th>
+                <th onClick={() => handleSort('quoteDate')}>Quote Date <ChevronDown className="inline h-4 w-4" /></th>
+                <th onClick={() => handleSort('quoteDueDate')}>Due Date <ChevronDown className="inline h-4 w-4" /></th>
+                <th>Status</th>
+                <th>Action</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {hasMore && (
-        <button
-          onClick={() => setPage(prev => prev + 1)}
-          className="mt-4 bg-indigo-500 text-white px-4 py-2 rounded-md w-full"
-        >
-          Load More
-        </button>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {quotes.map((quote) => (
+                <tr key={quote.id}>
+                  <td onClick={() => navigate(`/quotes/${quote.id}`)}>
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0 h-10 w-10">
+                        <img loading="lazy" className="h-10 w-10 rounded-full" src={`https://ui-avatars.com/api/?name=${quote.client.firstName}`} alt="" />
+                      </div>
+                      <div className="ml-4">
+                        <div>{quote.client.firstName} {quote.client.lastName}</div>
+                        <div>{quote.client.email}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>{new Date(quote.quoteDate).toLocaleDateString()}</td>
+                  <td>{new Date(quote.quoteDueDate).toLocaleDateString()}</td>
+                  <td>
+                    <span className={`px-2 inline-flex text-xs font-semibold rounded-full ${quote.status === 'Accepted' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                      {quote.status}
+                    </span>
+                  </td>
+                  <td>
+                    <button onClick={() => deleteQuote(quote.id)}><Trash2 className="h-5 w-5" /></button>
+                    <button onClick={() => navigate(`/quotes/updatequote/${quote.id}`)}><Edit2 className="h-5 w-5" /></button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {hasMore && !loading && (
+        <div className="flex justify-center mt-6">
+          <button onClick={() => setPage(prev => prev + 1)} className="px-4 py-2 bg-blue-500 text-white rounded-md">
+            Load More
+          </button>
+        </div>
       )}
     </div>
   );

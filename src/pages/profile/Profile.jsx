@@ -1,5 +1,5 @@
 import axios from 'axios';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
 const sampleData = {
   companyName: 'Sample Company Ltd.',
@@ -25,6 +25,7 @@ const sampleData = {
 
 
 const Profile = () => {
+  const[profileData,setProfileData] = useState();
   const accesstoken = JSON.parse(localStorage.getItem('accesstoken'));
       const fetchDetails = async() =>{  
 
@@ -37,7 +38,8 @@ const Profile = () => {
               }
             )
             if(res.status==200){
-              console.log(res.data)
+              // console.log(res.data.user)
+              setProfileData(res.data.user || {})
             }
           }catch(err){
             if(axios.isAxiosError(err)){
@@ -45,9 +47,12 @@ const Profile = () => {
             }
           }
       }
+      // console.log(profileData.companyName)
       useEffect(()=>{
         fetchDetails();
       },[])
+
+      if(!profileData) return <h1 className='text-blue-400'>Loading....</h1>
   return (
     <div className="container mx-auto p-4 sm:p-6 bg-gray-50">
       <h1 className="text-2xl font-bold mb-6">Profile Information</h1>
@@ -58,7 +63,7 @@ const Profile = () => {
           <label className="block text-sm font-medium text-gray-700">Company Name:</label>
           <input
             type="text"
-            value={sampleData.companyName}
+            value={profileData.companyName}
             readOnly
             className="mt-1 block w-full border rounded-md border-gray-300 px-4 py-2 bg-gray-100"
           />
@@ -67,7 +72,7 @@ const Profile = () => {
           <label className="block text-sm font-medium text-gray-700">Company Phone:</label>
           <input
             type="text"
-            value={sampleData.companyPhone}
+            value={profileData.companyPhone}
             readOnly
             className="mt-1 block w-full border rounded-md border-gray-300 px-4 py-2 bg-gray-100"
           />
@@ -100,7 +105,7 @@ const Profile = () => {
           <label className="block text-sm font-medium text-gray-700">Bank Name:</label>
           <input
             type="text"
-            value={sampleData.bankName}
+            value={profileData.bankName}
             readOnly
             className="mt-1 block w-full border rounded-md border-gray-300 px-4 py-2 bg-gray-100"
           />
@@ -109,7 +114,7 @@ const Profile = () => {
           <label className="block text-sm font-medium text-gray-700">Account Number:</label>
           <input
             type="text"
-            value={sampleData.bankAccountNumber}
+            value={profileData.bankAccountNumber}
             readOnly
             className="mt-1 block w-full border rounded-md border-gray-300 px-4 py-2 bg-gray-100"
           />
@@ -118,7 +123,7 @@ const Profile = () => {
           <label className="block text-sm font-medium text-gray-700">IFSC Code:</label>
           <input
             type="text"
-            value={sampleData.ifscCode}
+            value={profileData.ifscCode}
             readOnly
             className="mt-1 block w-full border rounded-md border-gray-300 px-4 py-2 bg-gray-100"
           />
@@ -127,7 +132,7 @@ const Profile = () => {
           <label className="block text-sm font-medium text-gray-700">Branch Name:</label>
           <input
             type="text"
-            value={sampleData.bankBranchName}
+            value={profileData.bankBranchName}
             readOnly
             className="mt-1 block w-full border rounded-md border-gray-300 px-4 py-2 bg-gray-100"
           />
@@ -140,7 +145,7 @@ const Profile = () => {
           <label className="block text-sm font-medium text-gray-700">Username:</label>
           <input
             type="text"
-            value={sampleData.userName}
+            value={profileData.userName}
             readOnly
             className="mt-1 block w-full border rounded-md border-gray-300 px-4 py-2 bg-gray-100"
           />
@@ -149,7 +154,7 @@ const Profile = () => {
           <label className="block text-sm font-medium text-gray-700">PAN Number:</label>
           <input
             type="text"
-            value={sampleData.panNumber}
+            value={profileData.panNumber}
             readOnly
             className="mt-1 block w-full border rounded-md border-gray-300 px-4 py-2 bg-gray-100"
           />
@@ -158,7 +163,7 @@ const Profile = () => {
           <label className="block text-sm font-medium text-gray-700">Email:</label>
           <input
             type="text"
-            value={sampleData.email}
+            value={profileData.email}
             readOnly
             className="mt-1 block w-full border rounded-md border-gray-300 px-4 py-2 bg-gray-100"
           />
@@ -167,7 +172,7 @@ const Profile = () => {
           <label className="block text-sm font-medium text-gray-700">GST Number:</label>
           <input
             type="text"
-            value={sampleData.gstinNumber}
+            value={profileData.gstinNumber}
             readOnly
             className="mt-1 block w-full border rounded-md border-gray-300 px-4 py-2 bg-gray-100"
           />
@@ -176,7 +181,7 @@ const Profile = () => {
           <label className="block text-sm font-medium text-gray-700">MSME Number:</label>
           <input
             type="text"
-            value={sampleData.msmeNumber}
+            value={profileData.msmeNumber}
             readOnly
             className="mt-1 block w-full border rounded-md border-gray-300 px-4 py-2 bg-gray-100"
           />
@@ -185,7 +190,7 @@ const Profile = () => {
           <label className="block text-sm font-medium text-gray-700">Street:</label>
           <input
             type="text"
-            value={sampleData.street}
+            value={profileData.street}
             readOnly
             className="mt-1 block w-full border rounded-md border-gray-300 px-4 py-2 bg-gray-100"
           />
@@ -194,7 +199,7 @@ const Profile = () => {
           <label className="block text-sm font-medium text-gray-700">City:</label>
           <input
             type="text"
-            value={sampleData.city}
+            value={profileData.city}
             readOnly
             className="mt-1 block w-full border rounded-md border-gray-300 px-4 py-2 bg-gray-100"
           />
@@ -203,7 +208,7 @@ const Profile = () => {
           <label className="block text-sm font-medium text-gray-700">State:</label>
           <input
             type="text"
-            value={sampleData.state}
+            value={profileData.state}
             readOnly
             className="mt-1 block w-full border rounded-md border-gray-300 px-4 py-2 bg-gray-100"
           />
@@ -212,7 +217,7 @@ const Profile = () => {
           <label className="block text-sm font-medium text-gray-700">Country:</label>
           <input
             type="text"
-            value={sampleData.country}
+            value={profileData.country}
             readOnly
             className="mt-1 block w-full border rounded-md border-gray-300 px-4 py-2 bg-gray-100"
           />
@@ -221,7 +226,7 @@ const Profile = () => {
           <label className="block text-sm font-medium text-gray-700">Post Code:</label>
           <input
             type="text"
-            value={sampleData.postCode}
+            value={profileData.postCode}
             readOnly
             className="mt-1 block w-full border rounded-md border-gray-300 px-4 py-2 bg-gray-100"
           />

@@ -4,79 +4,57 @@ import { Link, useNavigate } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import axios from 'axios';
 
-
-const  InvoicePage = () => {
+const InvoicePage = () => {
   const [invoices, setInvoices] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
-  const accesstoken = JSON.parse(localStorage.getItem("accesstoken"))
-  const [statusUpdate,setStatusUpdate] = useState(false);
+  const accesstoken = JSON.parse(localStorage.getItem("accesstoken"));
+  const [statusUpdate, setStatusUpdate] = useState(false);
+  const [loading, setLoading] = useState(true); // Loading state for data fetch
   const navigate = useNavigate();
+
   useEffect(() => {
-    let filteredInvoices = [...invoices];
+    fetchInvoices();
+  }, [searchTerm, dateRange, sortConfig, statusUpdate]);
 
-    if (searchTerm) {
-      filteredInvoices = filteredInvoices.filter(invoice =>
-        invoice.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        invoice.id.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    if (dateRange.start && dateRange.end) {
-      filteredInvoices = filteredInvoices.filter(invoice =>
-        invoice.invoiceDate >= dateRange.start && invoice.invoiceDate <= dateRange.end
-      );
-    }
-
-    if (sortConfig.key) {
-      filteredInvoices.sort((a, b) => {
-        if (a[sortConfig.key] < b[sortConfig.key]) return sortConfig.direction === 'ascending' ? -1 : 1;
-        if (a[sortConfig.key] > b[sortConfig.key]) return sortConfig.direction === 'ascending' ? 1 : -1;
-        return 0;
+  const fetchInvoices = async () => {
+    setLoading(true); // Start loading
+    try {
+      const res = await axios.get(`http://localhost:3000/api/invoices`, {
+        headers: { Authorization: `Bearer ${accesstoken}` },
       });
-    }
-    fetchInvoices()
-    // setInvoices(3);
-  }, [searchTerm, dateRange, sortConfig,statusUpdate]);
-
-
-  const fetchInvoices  = async() =>{
-    try{
-      const res = await axios.get(`http://localhost:3000/api/invoices`,{headers:{Authorization:`Bearer ${accesstoken}`}})
-      if(res.status==200){
-        console.log(res.data.result)
-        setInvoices(res.data.result || [])
+      if (res.status === 200) {
+        setInvoices(res.data.result || []);
       }
-    }catch(err){
-      if(axios.isAxiosError(err)){
-        console.log(err.response?.data.message)
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        console.log(err.response?.data.message);
       }
     }
-  }
+    setLoading(false); // End loading
+  };
 
-  const deleteInvoice = async(id) =>{
-    try{  
-      const res = await axios.delete(`http://localhost:3000/api/invoices/${id}`,{
-        headers:{
-          Authorization:`Bearer ${accesstoken}`
-        }
-      })
-      if(res.status==204){
-          setStatusUpdate(prev => !prev)
-          alert("invoice is deleted....")
+  const deleteInvoice = async (id) => {
+    try {
+      const res = await axios.delete(`http://localhost:3000/api/invoices/${id}`, {
+        headers: { Authorization: `Bearer ${accesstoken}` },
+      });
+      if (res.status === 204) {
+        setStatusUpdate((prev) => !prev);
+        alert("Invoice deleted.");
       }
-    }catch(err){
-      if(axios.isAxiosError(err)){
-        console.log(err.response?.data.message)
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        console.log(err.response?.data.message);
       }
     }
-  }
+  };
 
   const handleSort = (key) => {
-    setSortConfig(prevConfig => ({
+    setSortConfig((prevConfig) => ({
       key,
-      direction: prevConfig.key === key && prevConfig.direction === 'ascending' ? 'descending' : 'ascending'
+      direction: prevConfig.key === key && prevConfig.direction === 'ascending' ? 'descending' : 'ascending',
     }));
   };
 
@@ -87,8 +65,12 @@ const  InvoicePage = () => {
     XLSX.writeFile(workbook, 'invoices.xlsx');
   };
 
-  if(!invoices) return <h1>Loading...</h1>
- 
+  if (loading) return (
+    <div className="flex justify-center items-center h-screen">
+      <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500"></div>
+    </div>
+  );
+
   return (
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
@@ -107,16 +89,16 @@ const  InvoicePage = () => {
             type="date"
             className="border rounded-md px-3 py-2"
             value={dateRange.start}
-            onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+            onChange={(e) => setDateRange((prev) => ({ ...prev, start: e.target.value }))}
           />
           <input
             type="date"
             className="border rounded-md px-3 py-2"
             value={dateRange.end}
-            onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
+            onChange={(e) => setDateRange((prev) => ({ ...prev, end: e.target.value }))}
           />
           <button
-            onClick={()=>navigate("/exportsheet")}
+            onClick={exportToExcel}
             className="flex items-center space-x-1 bg-blue-500 text-white px-4 py-2 rounded-md"
           >
             <Download className="h-4 w-4" />
@@ -141,21 +123,15 @@ const  InvoicePage = () => {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onClick={() => handleSort('dueDate')}>
                 Due Date <ChevronDown className="inline h-4 w-4" />
               </th>
-           
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Action
-              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-
             {invoices.map((invoice) => (
               <tr key={invoice.id}>
                 <td className="px-6 py-4 whitespace-nowrap cursor-pointer">
-                  <div className="flex items-center" onClick={()=>navigate(`/invoice/${invoice.id}`)}>
+                  <div className="flex items-center" onClick={() => navigate(`/invoice/${invoice.id}`)}>
                     <div className="flex-shrink-0 h-10 w-10">
                       <img className="h-10 w-10 rounded-full" src={`https://ui-avatars.com/api/?name=${invoice.client.firstName}&background=random`} alt="" />
                     </div>
@@ -171,20 +147,16 @@ const  InvoicePage = () => {
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900">{invoice.invoiceDueDate}</div>
                 </td>
-               
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                    ${invoice.status === 'Paid' ? 'bg-green-100 text-green-800' : 
-                      invoice.status === 'Partially Paid' ? 'bg-yellow-100 text-yellow-800' : 
-                      'bg-gray-100 text-gray-800'}`}>
+                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${invoice.status === 'Paid' ? 'bg-green-100 text-green-800' : invoice.status === 'Partially Paid' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'}`}>
                     {invoice.status}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <button onClick={()=>deleteInvoice(invoice.id)} className="text-indigo-600 hover:text-indigo-900 mr-2">
+                  <button onClick={() => deleteInvoice(invoice.id)} className="text-indigo-600 hover:text-indigo-900 mr-2">
                     <Trash2 className="h-5 w-5" />
                   </button>
-                  <button className="text-gray-600 hover:text-gray-900">
+                  <button onClick={()=>navigate(`/invoice/updateinvoice/${invoice.id}`)} className="text-gray-600 hover:text-gray-900">
                     <Edit2 className="h-5 w-5" />
                   </button>
                 </td>
@@ -195,5 +167,6 @@ const  InvoicePage = () => {
       </div>
     </div>
   );
-}
-export default InvoicePage
+};
+
+export default InvoicePage;
