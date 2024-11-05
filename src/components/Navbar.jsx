@@ -28,7 +28,7 @@ const Navbar = ({ toggleSidebar }) => {
             className="flex items-center space-x-2 p-2 rounded-full hover:bg-gray-100"
           >
             <img
-              src={profileData.companyLogo ? profileData.companyLogo : `https://ui-avatars.com/api/?name=${profileData.companyName[0]}&background=random`}
+              src={profileData.companyLogo ? profileData.companyLogo : `https://ui-avatars.com/api/?name=${profileData.companyName}&background=random`}
               alt="User"
               className="w-16 h-8 rounded object-contain"
             />
