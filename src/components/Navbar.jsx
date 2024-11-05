@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Bell, ChevronDown, Users, Settings, LogOut, Menu } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
+import useProfile from '../hooks/useProfile'
 
 const Navbar = ({ toggleSidebar }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false)
@@ -9,6 +10,7 @@ const Navbar = ({ toggleSidebar }) => {
       localStorage.clear();
       navigate("/login")
   }
+  const { profileData } = useProfile();
 
   return (
     <header className="bg-white border-b flex items-center justify-between p-1.5    ">
@@ -16,7 +18,7 @@ const Navbar = ({ toggleSidebar }) => {
         <button onClick={toggleSidebar} className="md:hidden mr-2 p-2 rounded-md hover:bg-gray-100">
           <Menu className="h-6 w-6" />
         </button>
-        <h1 className="text-2xl font-semibold">Nyas Engineering  .</h1>
+        <h1 className="text-2xl font-semibold">{profileData.companyName ? profileData.companyName : "" }</h1>
       </div>
       <div className="flex items-center space-x-4">
         
@@ -26,9 +28,9 @@ const Navbar = ({ toggleSidebar }) => {
             className="flex items-center space-x-2 p-2 rounded-full hover:bg-gray-100"
           >
             <img
-              src="https://ui-avatars.com/api/?name=N&background=random"
+              src={profileData.companyLogo ? profileData.companyLogo : `https://ui-avatars.com/api/?name=${profileData.companyName}&background=random`}
               alt="User"
-              className="w-8 h-8 rounded-full"
+              className="w-16 h-8 rounded object-contain"
             />
             <ChevronDown className="h-4 w-4" />
           </button>
