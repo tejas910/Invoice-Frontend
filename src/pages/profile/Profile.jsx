@@ -1,29 +1,6 @@
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 
-const sampleData = {
-  companyName: 'Sample Company Ltd.',
-  companyPhone: '123-456-7890',
-  street: '123 Sample Street',
-  city: 'Sample City',
-  state: 'Sample State',
-  country: 'Sample Country',
-  postCode: '12345',
-  bankName: 'Sample Bank',
-  bankAccountNumber: '0123456789',
-  bankBranchName: 'Sample Branch',
-  ifscCode: 'SAMP0000123',
-  gstinNumber: '123456789012345',
-  panNumber: 'ABCDE1234F',
-  msmeNumber: 'MSME123456',
-  userName: 'sampleuser',
-  email: 'sample@example.com',
-  companyLogo: 'https://via.placeholder.com/150',
-  companyAuthorizedSign: 'https://via.placeholder.com/150',
-  companyStamp: 'https://via.placeholder.com/150'
-};
-
-
 const Profile = () => {
   const[profileData,setProfileData] = useState();
   const accesstoken = JSON.parse(localStorage.getItem('accesstoken'));
@@ -77,23 +54,23 @@ const Profile = () => {
             className="mt-1 block w-full border rounded-md border-gray-300 px-4 py-2 bg-gray-100"
           />
         </div>
-        <div className='flex justify-start flex-row'>
-        <div>
-          <label className="block text-sm font-medium text-gray-700"> Logo </label>
+        <div className='flex justify-evenly items-center flex-row'>
+        <div className='h-40'>
+          <label className="block text-sm font-medium text-gray-700 mb-2"> Logo </label>
           <div className="flex items-center">
-            <img src={sampleData.companyLogo} alt="Company Logo" className="h-20 w-20 object-cover rounded-full border border-gray-300 mr-4" />
+            <img src={profileData.companyLogo} alt="Company Logo" className="h-30 w-40 object-cover rounded border mr-4" />
           </div>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Signature</label>
+        <div className='h-40'>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Signature</label>
           <div className="flex items-center">
-            <img src={sampleData.companyAuthorizedSign} alt="Authorized Signature" className="h-20 w-20 object-cover rounded-full border border-gray-300 mr-4" />
+            <img src={profileData.companyAuthorizedSign} alt="Authorized Signature" className="h-30 w-40 object-cover rounded mr-4" />
           </div>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Stamp</label>
+        <div className='h-40'>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Stamp</label>
           <div className="flex items-center">
-            <img src={sampleData.companyStamp} alt="Company Stamp" className="h-20 w-20 object-cover rounded-full border border-gray-300 mr-4" />
+            <img src={profileData.companyStamp} alt="Company Stamp" className="h-30 w-40 object-cover rounded mr-4" />
           </div>
         </div>
         </div>

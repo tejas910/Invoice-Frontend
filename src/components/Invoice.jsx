@@ -40,30 +40,38 @@ function Invoice() {
 
   const { invoice } = invoiceData;
 
-  const generatePDF = async () => {
-    const element = invoiceRef.current;
+  // const generatePDF = async () => {
+  //   const element = invoiceRef.current;
   
-    // Temporarily remove background and shadow styles
-    const originalBackground = element.style.background;
-    const originalBoxShadow = element.style.boxShadow;
-    element.style.backgroundColor = "white";  // Set white background to avoid grey
-    element.style.boxShadow = "none";         // Remove shadow
+  //   await html2canvas(element, {
+  //     backgroundColor: "#ffffff",
+  //     scale: 2,
+  //   }).then(async (canvas) => {
+  //     const imgData = canvas.toDataURL("image/png");
+  //     const pdf = new jsPDF("p", "mm", "a4");
   
-    // Capture the canvas without any background color or shadow
-    const canvas = await html2canvas(element, { backgroundColor: "#ffffff" });  // Explicitly set to white
-    const imgData = canvas.toDataURL("image/png");
+  //     const pdfWidth = pdf.internal.pageSize.getWidth();
+  //     const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
   
-    const pdf = new jsPDF("p", "mm", "a4");
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+  //     // Add logo if it exists
+  //     if (invoiceData.invoice.user.companyLogo) {
+  //       const logoData = invoiceData.invoice.user.companyLogo;
+  //       const logoWidth = 40; // Adjust width as needed
+  //       const logoHeight = 20; // Adjust height as needed
+  //       // Positioning logo at top right corner
+  //       pdf.addImage(logoData, "PNG", pdfWidth - logoWidth - 10, 10, logoWidth, logoHeight);
+  //     }
   
-    pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-    pdf.save(`invoice_${invoiceId}.pdf`);
+  //     // Add content below the logo
+  //     const contentYPosition = 40; // Adjust this value based on your layout
+  //     pdf.addImage(imgData, "PNG", 10, contentYPosition, pdfWidth - 20, pdfHeight);
+      
+  //     // Save the generated PDF
+  //     pdf.save(`invoice_${invoiceId}.pdf`);
+  //   });
+  // };
   
-    // Restore original styles after PDF generation
-    element.style.background = originalBackground;
-    element.style.boxShadow = originalBoxShadow;
-  };
+
   
   if (loading) {
     return <h1>Loading...</h1>;
@@ -71,7 +79,7 @@ function Invoice() {
 
   return (
     <div>
-        <button onClick={generatePDF} className="bg-indigo-500 text-white px-4 py-2 rounded-md mt-2">Download PDF</button>
+        {/* <button onClick={generatePDF} className="bg-indigo-500 text-white px-4 py-2 rounded-md mt-2">Download PDF</button> */}
         <div ref={invoiceRef} className="max-w-4xl mx-auto p-8 bg-white shadow-xl rounded-lg">
             <Header invoice={invoice} />
             <AddressInfo user={invoice.user} client={invoice.client} shippingAddress={invoice.shippingAddress} />
