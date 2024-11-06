@@ -1,12 +1,58 @@
-import axios from "axios";
-import React, { useEffect, useState } from "react";
-import useProfile from "../../hooks/useProfile";
+import axios from 'axios';
+import React, { useEffect, useState } from 'react';
+
+const sampleData = {
+  companyName: 'Sample Company Ltd.',
+  companyPhone: '123-456-7890',
+  street: '123 Sample Street',
+  city: 'Sample City',
+  state: 'Sample State',
+  country: 'Sample Country',
+  postCode: '12345',
+  bankName: 'Sample Bank',
+  bankAccountNumber: '0123456789',
+  bankBranchName: 'Sample Branch',
+  ifscCode: 'SAMP0000123',
+  gstinNumber: '123456789012345',
+  panNumber: 'ABCDE1234F',
+  msmeNumber: 'MSME123456',
+  userName: 'sampleuser',
+  email: 'sample@example.com',
+  companyLogo: 'https://via.placeholder.com/150',
+  companyAuthorizedSign: 'https://via.placeholder.com/150',
+  companyStamp: 'https://via.placeholder.com/150'
+};
+
 
 const Profile = () => {
-  const { isLoading, profileData } = useProfile();
+  const[profileData,setProfileData] = useState();
+  const accesstoken = JSON.parse(localStorage.getItem('accesstoken'));
+      const fetchDetails = async() =>{  
 
-  if (isLoading) return <h1 className="text-blue-400">Loading....</h1>;
+          try{
+            const res = await axios.get(`http://localhost:3000/api/users`,
+              {
+                headers:{
+                  Authorization:`Bearer ${accesstoken}`
+                }
+              }
+            )
+            if(res.status==200){
+              // console.log(res.data.user)
+              setProfileData(res.data.user || {})
+            }
+          }catch(err){
+            if(axios.isAxiosError(err)){
+              console.log(err.response?.data.message)
+            }
+          }
+      }
+      // console.log(profileData.companyName)
+      useEffect(()=>{
+        fetchDetails();
+      },[])
 
+      if(!profileData) return <h1 className='text-blue-400'>Loading....</h1>
   return (
     <div className="container mx-auto p-4 sm:p-6 bg-gray-50">
       <h1 className="text-2xl font-bold mb-6">Profile Information</h1>
@@ -236,6 +282,9 @@ const Profile = () => {
             className="mt-1 block w-full border rounded-md border-gray-300 px-4 py-2 bg-gray-100"
           />
         </div>
+      </div>
+      <div className=' mt-10 flex justify-end align-end '>
+        <button onClick={()=>navigate(`/setting`)} className='bg-indigo-500 text-white px-4 py-2 rounded-md'>Update Details</button>
       </div>
     </div>
   );

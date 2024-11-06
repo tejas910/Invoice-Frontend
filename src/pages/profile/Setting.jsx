@@ -38,6 +38,25 @@ export default function Setting() {
     console.log('Company Settings saved:', settings);
   };
 
+  const fetchUserDetails = async()=>{
+    try{
+      const res = await axios.get(`http://localhost:3000/api/users`,
+        {
+          headers:{
+            Authorization:`Bearer ${accesstoken}`
+          }
+        }
+      )
+      if(res.status==200){
+        console.log(res.data.user)
+      }
+    }catch(err){
+      if(axios.isAxiosError(err)){
+        console.log(err.response?.data.message)
+      }
+    }
+  }
+
   const handleSubmitBank = async(e) => {
     e.preventDefault();
     console.log('Bank Settings saved:', settings);
