@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Search, Plus, Edit, Trash2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import { toast } from 'react-toastify'
 
 export default function Taxes() {
   const [taxes, setTaxes] = useState([])
@@ -33,6 +34,7 @@ export default function Taxes() {
         headers: { Authorization: `Bearer ${accesstoken}` }
       })
       if (res.status === 204) {
+        toast.error("Tax Deleted Successfully",{position:"top-right"})
         setStatus(prev => !prev)
       }
     } catch (err) {

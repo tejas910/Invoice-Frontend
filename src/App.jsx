@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Navbar from './components/Navbar';
-import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom';
 import InvoicePage from './pages/invoices/InvoicePage';
 import Setting from './pages/profile/Setting';
 import Product from './pages/product/Product';
@@ -29,7 +31,6 @@ import ExportPage from './pages/invoices/ExportPage';
 import Invoice from './components/Invoice';
 import Quotes from './pages/quotes/Quotes';
 import AddQuotesPage from './pages/quotes/AddQuotesPage';
-import { Quote } from 'lucide-react';
 import QuotePdf from './components/QuotePdf';
 import UpdateInvoicePage from './pages/invoices/UpdateInvoicePage';
 
@@ -45,6 +46,7 @@ function App() {
       {!isAuthRoute && <Sidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />}
       <div className="flex-grow">
         {!isAuthRoute && <Navbar toggleSidebar={toggleSidebar} />}
+      <ToastContainer />
         <Routes>
           <Route element={<UserPrivateRoute />}>
             <Route path='/' element={<Home />} />

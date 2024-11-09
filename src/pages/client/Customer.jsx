@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Search, Plus, Edit, Trash2, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 export default function Customer() {
   const accesstoken = JSON.parse(localStorage.getItem("accesstoken"));
@@ -52,6 +53,7 @@ export default function Customer() {
     try {
       const res = await axios.delete(`http://localhost:3000/api/customers/${id}`, { headers: { Authorization: `Bearer ${accesstoken}` } });
       if (res.status === 204) {
+        toast.error("Customer Deleted Successfully",{position:"top-right"})
         setStatus(prev => !prev);
       }
     } catch (err) {

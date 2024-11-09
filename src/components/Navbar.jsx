@@ -2,11 +2,13 @@ import React, { useState } from 'react'
 import { Bell, ChevronDown, Users, Settings, LogOut, Menu } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import useProfile from '../hooks/useProfile'
+import { toast } from 'react-toastify'
 
 const Navbar = ({ toggleSidebar }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const navigate = useNavigate()
   const handleLogout = () =>{
+      toast.success("Logout Successfully",{position:"top-right"})
       localStorage.clear();
       navigate("/login")
   }

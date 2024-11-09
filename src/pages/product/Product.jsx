@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Search, Plus, Edit, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 export default function Product() {
   const accesstoken = JSON.parse(localStorage.getItem("accesstoken"));
@@ -71,6 +72,7 @@ export default function Product() {
     try{
       const res = await axios.delete(`http://localhost:3000/api/products/${id}`, { headers: { Authorization: `Bearer ${accesstoken}` } });
       if(res.status === 204){
+        toast.error("Product deleted successfully",{position:"top-right"});
         setStatus(prev => !prev);
       }
     }catch(err){

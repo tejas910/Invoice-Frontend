@@ -12,6 +12,7 @@ import { Link, useNavigate } from "react-router-dom";
 import * as XLSX from "xlsx";
 import axios from "axios";
 import Pagination from "../../common/Pagination"; // Import your Pagination component
+import { toast } from "react-toastify";
 
 const InvoicePage = () => {
   const [invoices, setInvoices] = useState([]);
@@ -76,7 +77,7 @@ const InvoicePage = () => {
       );
       if (res.status === 204) {
         setStatusUpdate((prev) => !prev);
-        alert("Invoice deleted.");
+        toast.error("Invoice Deleted",{position:"top-right"})
       }
     } catch (err) {
       if (axios.isAxiosError(err)) {
