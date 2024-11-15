@@ -4,14 +4,14 @@ import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 
-function UpdateInvoicePage() {
+function UpdateQuote() {
   const navigate = useNavigate();
-  const { invoiceId } = useParams();
+  const { quoteId } = useParams();
   const [invoice, setInvoice] = useState({
-    invoiceNumber: "",
-    invoiceDate: "",
-    invoiceDueDate: "",
-    status: "Pending",
+    quoteNumber: "",
+    quoteDate: "",
+    quoteDueDate: "",
+    status: "Draft",
     subTotal: 0,
     totalTax: 0,
     discount: 0,
@@ -19,9 +19,9 @@ function UpdateInvoicePage() {
     notes: "",
     clientId: "",
     shippingAddressId: "",
-    invoiceItems: [],
+    quoteItems: [],
   });
-  const [invoiceItems, setInvoiceItems] = useState([
+  const [quoteItems, setInvoiceItems] = useState([
     {
       productName: "",
       hsnCode: "",
@@ -52,14 +52,15 @@ function UpdateInvoicePage() {
   const [addresses, setAddresses] = useState([]);
 
   useEffect(() => {
-    fetchInvoiceData();
+    fetchQuoteeData();
     fetchProducts();
-  }, [invoiceId]);
+  }, [quoteId]);
+  console.log(quoteId);
 
-  const fetchInvoiceData = async () => {
+  const fetchQuoteeData = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:3000/api/invoices/${invoiceId}`,
+        `http://localhost:3000/api/quotes/${quoteId}`,
         {
           headers: {
             Authorization: `Bearer ${JSON.parse(
@@ -69,10 +70,10 @@ function UpdateInvoicePage() {
         }
       );
       if (response.status === 200) {
-        setInvoiceItems(response.data.result.invoice.invoiceItems);
-        setInvoice(response.data.result.invoice);
-        setClient(response.data.result.invoice.client);
-        fetchClientAddresses(response.data.result.invoice.client.id);
+        setInvoiceItems(response.data.result.quote.quoteItems);
+        setInvoice(response.data.result.quote);
+        setClient(response.data.result.quote.client);
+        fetchClientAddresses(response.data.result.quote.client.id);
       }
     } catch (error) {
       console.error("Error fetching invoice data", error);
@@ -137,7 +138,7 @@ function UpdateInvoicePage() {
     const { value, name } = event.target;
 
     // Check if the field is a date input
-    if (name === "invoiceDate" || name === "invoiceDueDate") {
+    if (name === "quoteDate" || name === "quoteDueDate") {
       // Create a DateTime string (you can adjust the time as needed)
       const dateTimeString = new Date(`${value}T00:00:00`).toISOString();
       setInvoice((prev) => ({
@@ -145,10 +146,7 @@ function UpdateInvoicePage() {
         [name]: dateTimeString, // Store the complete DateTime
       }));
     } else if (name === "discount") {
-      const total = invoiceItems.reduce(
-        (acc, item) => acc + item.totalPrice,
-        0
-      );
+      const total = quoteItems.reduce((acc, item) => acc + item.totalPrice, 0);
       setInvoice((prev) => ({
         ...prev,
         discount: Number(value),
@@ -207,7 +205,7 @@ function UpdateInvoicePage() {
 
       setInvoice((prev) => ({
         ...prev,
-        invoiceItems: updatedItems,
+        quoteItems: updatedItems,
       }));
       // Return the updated items array
       return updatedItems;
@@ -287,11 +285,24 @@ function UpdateInvoicePage() {
     event.preventDefault();
     const cleanedInvoice = {
       ...invoice,
-      invoiceItems: invoiceItems.map(({ tax, ...rest }) => rest),
+      quoteItems: quoteItems.map(({ tax, ...rest }) => rest),
     };
     try {
+      if (invoice.status === "Converted_To_Invoice") {
+        const res = await axios.post(
+          `http://localhost:3000/api/quotes/quote-to-invoice/${quoteId}`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${JSON.parse(
+                localStorage.getItem("accesstoken") || ""
+              )}`,
+            },
+          }
+        );
+      }
       const response = await axios.put(
-        `http://localhost:3000/api/invoices/${invoiceId}`,
+        `http://localhost:3000/api/quotes/${quoteId}`,
         cleanedInvoice,
         {
           headers: {
@@ -302,7 +313,7 @@ function UpdateInvoicePage() {
         }
       );
       if (response.status === 200) {
-        navigate("/invoice");
+        navigate("/quotes");
         toast.success("Invoice Updated.");
       }
     } catch (error) {
@@ -312,7 +323,7 @@ function UpdateInvoicePage() {
 
   return (
     <div className="w-full max-w-4xl mx-auto p-6 bg-white shadow-md rounded-lg">
-      <h2 className="text-2xl font-semibold mb-4">Update Invoice</h2>
+      <h2 className="text-2xl font-semibold mb-4">Update Quote</h2>
       <form
         onSubmit={(event) => {
           handleOnSubmit(event);
@@ -333,12 +344,12 @@ function UpdateInvoicePage() {
             />
           </div>
           <div>
-            <label htmlFor="invoiceNumber" className="block mb-1">
+            <label htmlFor="quoteNumber" className="block mb-1">
               Invoice #*
             </label>
             <input
-              name="invoiceNumber"
-              value={invoice.invoiceNumber}
+              name="quoteNumber"
+              value={invoice.quoteNumber}
               className="w-full p-2 border border-gray-300 rounded"
               type="text"
               readOnly
@@ -346,26 +357,26 @@ function UpdateInvoicePage() {
           </div>
 
           <div>
-            <label htmlFor="invoiceDate" className="block mb-1">
+            <label htmlFor="quoteDate" className="block mb-1">
               Invoice Date*
             </label>
             <input
               type="date"
-              name="invoiceDate"
-              value={invoice.invoiceDate.split("T")[0]}
+              name="quoteDate"
+              value={invoice.quoteDate.split("T")[0]}
               onChange={handleInvoiceChanges}
               className="w-full p-2 border border-gray-300 rounded"
               required
             />
           </div>
           <div>
-            <label htmlFor="invoiceDueDate" className="block mb-1">
+            <label htmlFor="quoteDueDate" className="block mb-1">
               Due Date*
             </label>
             <input
               type="date"
-              name="invoiceDueDate"
-              value={invoice.invoiceDueDate.split("T")[0]}
+              name="quoteDueDate"
+              value={invoice.quoteDueDate.split("T")[0]}
               onChange={handleInvoiceChanges}
               className="w-full p-2 border border-gray-300 rounded"
               required
@@ -406,9 +417,10 @@ function UpdateInvoicePage() {
               onChange={handleInvoiceChanges}
               className="w-full p-2 border border-gray-300 rounded"
             >
-              <option value="Pending">Pending</option>
-              <option value="Paid">Paid</option>
-              <option value="Partially_Paid">Partially Paid</option>
+              <option value="Draft">Draft</option>
+              <option value="Accepted">Accepted</option>
+              <option value="Declined">Declined</option>
+              <option value="Converted_To_Invoice">Converted To Invoice</option>
             </select>
           </div>
         </div>
@@ -428,7 +440,7 @@ function UpdateInvoicePage() {
 
         <div>
           <h3 className="text-xl font-semibold mb-4">Invoice Items</h3>
-          {invoiceItems.map((item, index) => (
+          {quoteItems.map((item, index) => (
             <div
               key={index}
               className="grid grid-cols-6 gap-4 items-center mb-4"
@@ -632,4 +644,4 @@ function UpdateInvoicePage() {
   );
 }
 
-export default UpdateInvoicePage;
+export default UpdateQuote;

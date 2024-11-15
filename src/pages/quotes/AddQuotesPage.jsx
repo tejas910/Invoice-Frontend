@@ -21,6 +21,7 @@ export default function AddQuotesPage() {
     shippingAddressId: "",
     quoteItems: [],
   });
+  console.log(quote.clientId)
   const [quoteItems, setQuoteItems] = useState([
     {
       productName: "",
