@@ -33,6 +33,7 @@ import Quotes from './pages/quotes/Quotes';
 import AddQuotesPage from './pages/quotes/AddQuotesPage';
 import QuotePdf from './components/QuotePdf';
 import UpdateInvoicePage from './pages/invoices/UpdateInvoicePage';
+import UpdateQuote from './pages/quotes/UpdateQuote';
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -74,6 +75,7 @@ function App() {
             <Route path='/exportsheet' element={<ExportPage/>}/>
             <Route path='/quotes/:quotesId' element={<QuotePdf/>}/>
             <Route path='/invoice/updateinvoice/:invoiceId' element={<UpdateInvoicePage/>}/>
+            <Route path='/quotes/updatequote/:quoteId' element={<UpdateQuote />}/>
           </Route>
 
           <Route element={<UserPublicRoute />}>

@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react";
 import { Trash2 } from "lucide-react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
 
-
-export default function AddQuotesPage() {
+function UpdateQuote() {
   const navigate = useNavigate();
-  const invNumber = (Math.floor(Math.random()*100))
-  const [quote, setQuote] = useState({
-    quoteNumber: `QUO${invNumber}`,
+  const { quoteId } = useParams();
+  const [invoice, setInvoice] = useState({
+    quoteNumber: "",
     quoteDate: "",
     quoteDueDate: "",
     status: "Draft",
@@ -21,8 +21,7 @@ export default function AddQuotesPage() {
     shippingAddressId: "",
     quoteItems: [],
   });
-  console.log(quote.clientId)
-  const [quoteItems, setQuoteItems] = useState([
+  const [quoteItems, setInvoiceItems] = useState([
     {
       productName: "",
       hsnCode: "",
@@ -35,11 +34,10 @@ export default function AddQuotesPage() {
       productId: "",
     },
   ]);
-  const [clients, setClients] = useState([
-    {
-      id: "",
-    },
-  ]);
+  const [client, setClient] = useState({
+    id: "",
+  });
+
   const [products, setProducts] = useState([
     {
       id: "",
@@ -53,28 +51,35 @@ export default function AddQuotesPage() {
   ]);
   const [addresses, setAddresses] = useState([]);
 
-  const fetchClients = async () => {
+  useEffect(() => {
+    fetchQuoteeData();
+    fetchProducts();
+  }, [quoteId]);
+  console.log(quoteId);
+
+  const fetchQuoteeData = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:3000/api/customers/fetch/id",
+        `http://localhost:3000/api/quotes/${quoteId}`,
         {
           headers: {
-            Authorization: `Bearer ${JSON.parse(localStorage.getItem("accesstoken"))}`,
+            Authorization: `Bearer ${JSON.parse(
+              localStorage.getItem("accesstoken")
+            )}`,
           },
         }
       );
       if (response.status === 200) {
-        setClients(response.data.clients);
+        setInvoiceItems(response.data.result.quote.quoteItems);
+        setInvoice(response.data.result.quote);
+        setClient(response.data.result.quote.client);
+        fetchClientAddresses(response.data.result.quote.client.id);
       }
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        console.error(error.response);
-      } else {
-        console.error(error);
-      }
+      console.error("Error fetching invoice data", error);
+      toast.error("Failed to fetch invoice data");
     }
   };
-
 
   const fetchProducts = async () => {
     try {
@@ -82,7 +87,9 @@ export default function AddQuotesPage() {
         "http://localhost:3000/api/products/fetch/id",
         {
           headers: {
-            Authorization: `Bearer ${JSON.parse(localStorage.getItem("accesstoken"))}`,
+            Authorization: `Bearer ${JSON.parse(
+              localStorage.getItem("accesstoken")
+            )}`,
           },
         }
       );
@@ -90,46 +97,38 @@ export default function AddQuotesPage() {
         setProducts(response.data.result);
       }
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        console.error(error.response);
-      } else {
-        console.error(error);
-      }
+      console.error(error);
+      toast.error("Failed to fetch products");
     }
   };
 
-  const fetchClientsAddresses = async (clientId) => {
+  const fetchClientAddresses = async (clientId) => {
     try {
       const response = await axios.get(
         `http://localhost:3000/api/customers/address/fetch/${clientId}`,
         {
           headers: {
-            Authorization: `Bearer ${JSON.parse(localStorage.getItem("accesstoken"))}`,
+            Authorization: `Bearer ${JSON.parse(
+              localStorage.getItem("accesstoken")
+            )}`,
           },
         }
       );
       if (response.status === 200) {
+        setInvoice((prev) => ({
+          ...prev,
+          clientId: clientId,
+        }));
         setAddresses(response.data.result);
       }
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        console.error(error.response);
-      } else {
-        console.error(error);
-      }
+      console.error(error);
+      toast.error("Failed to fetch client addresses");
     }
   };
 
-  const handleClientChange = (event) => {
-    setQuote((prev) => ({
-      ...prev,
-      clientId: event.target.value,
-    }));
-    fetchClientsAddresses(event.target.value);
-  };
-
   const handleAddressChange = (event) => {
-    setQuote((prev) => ({
+    setInvoice((prev) => ({
       ...prev,
       shippingAddressId: event.target.value,
     }));
@@ -142,22 +141,19 @@ export default function AddQuotesPage() {
     if (name === "quoteDate" || name === "quoteDueDate") {
       // Create a DateTime string (you can adjust the time as needed)
       const dateTimeString = new Date(`${value}T00:00:00`).toISOString();
-      setQuote((prev) => ({
+      setInvoice((prev) => ({
         ...prev,
         [name]: dateTimeString, // Store the complete DateTime
       }));
     } else if (name === "discount") {
-      const total = quoteItems.reduce(
-        (acc, item) => acc + item.totalPrice,
-        0
-      );
-      setQuote((prev) => ({
+      const total = quoteItems.reduce((acc, item) => acc + item.totalPrice, 0);
+      setInvoice((prev) => ({
         ...prev,
         discount: Number(value),
         total: total - Number(value),
       }));
     } else {
-      setQuote((prev) => ({
+      setInvoice((prev) => ({
         ...prev,
         [name]: value,
       }));
@@ -167,7 +163,7 @@ export default function AddQuotesPage() {
   const handleInvoiceItemsChanges = (event, index) => {
     const { value, name } = event.target;
 
-    setQuoteItems((prevItems) => {
+    setInvoiceItems((prevItems) => {
       const updatedItems = [...prevItems];
       const newQuantity =
         name === "quantity"
@@ -207,7 +203,7 @@ export default function AddQuotesPage() {
         };
       }
 
-      setQuote((prev) => ({
+      setInvoice((prev) => ({
         ...prev,
         quoteItems: updatedItems,
       }));
@@ -220,14 +216,14 @@ export default function AddQuotesPage() {
   };
 
   const calculations = () => {
-    setQuoteItems((prevItems) => {
+    setInvoiceItems((prevItems) => {
       const subTotal = prevItems.reduce((acc, item) => acc + item.subTotal, 0);
       const totalTax = prevItems.reduce(
         (acc, item) => acc + item.taxableAmount,
         0
       );
       const total = prevItems.reduce((acc, item) => acc + item.totalPrice, 0);
-      setQuote((prev) => ({
+      setInvoice((prev) => ({
         ...prev,
         subTotal: subTotal,
         totalTax: totalTax,
@@ -239,7 +235,7 @@ export default function AddQuotesPage() {
   };
 
   const addInvoiceItem = () => {
-    setQuoteItems((prevItems) => [
+    setInvoiceItems((prevItems) => [
       ...prevItems,
       {
         productId: "",
@@ -257,7 +253,7 @@ export default function AddQuotesPage() {
   };
 
   const removeInvoiceItem = (index) => {
-    setQuoteItems((prevItems) => {
+    setInvoiceItems((prevItems) => {
       if (prevItems.length > 1) {
         const updatedItems = prevItems.filter((_, i) => i !== index);
         const subTotal = updatedItems.reduce(
@@ -272,7 +268,7 @@ export default function AddQuotesPage() {
           (acc, item) => acc + item.totalPrice,
           0
         );
-        setQuote((prev) => ({
+        setInvoice((prev) => ({
           ...prev,
           subTotal: subTotal,
           totalTax: totalTax,
@@ -287,84 +283,87 @@ export default function AddQuotesPage() {
 
   const handleOnSubmit = async (event) => {
     event.preventDefault();
-    // Validate required fields
-    if (!quote.clientId || !quote.quoteNumber || !quote.quoteDate || !quote.shippingAddressId) {
-        alert("Please fill out all required fields.");
-        return;
-    }
+    const cleanedInvoice = {
+      ...invoice,
+      quoteItems: quoteItems.map(({ tax, ...rest }) => rest),
+    };
     try {
-        const response = await axios.post(
-            "http://localhost:3000/api/quotes",
-            quote,
-            {
-                headers: {
-                    Authorization: `Bearer ${JSON.parse(localStorage.getItem("accesstoken"))}`,
-                },
-            }
+      if (invoice.status === "Converted_To_Invoice") {
+        const res = await axios.post(
+          `http://localhost:3000/api/quotes/quote-to-invoice/${quoteId}`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${JSON.parse(
+                localStorage.getItem("accesstoken") || ""
+              )}`,
+            },
+          }
         );
-        if (response.status === 200) {
-            console.log(response.data);
-            alert("Quotes submitted")
-            navigate("/quotes")
+      }
+      const response = await axios.put(
+        `http://localhost:3000/api/quotes/${quoteId}`,
+        cleanedInvoice,
+        {
+          headers: {
+            Authorization: `Bearer ${JSON.parse(
+              localStorage.getItem("accesstoken") || ""
+            )}`,
+          },
         }
+      );
+      if (response.status === 200) {
+        navigate("/quotes");
+        toast.success("Invoice Updated.");
+      }
     } catch (error) {
-        alert("Please check you have submit data properly...",error.response)
-        console.error(error.response);
+      console.error(error.response.data);
     }
-};
-
-  useEffect(() => {
-    fetchClients();
-    fetchProducts();
-  }, []);
+  };
 
   return (
     <div className="w-full max-w-4xl mx-auto p-6 bg-white shadow-md rounded-lg">
-      <h2 className="text-2xl font-semibold mb-4">New Quote</h2>
+      <h2 className="text-2xl font-semibold mb-4">Update Quote</h2>
       <form
         onSubmit={(event) => {
           handleOnSubmit(event);
         }}
       >
+        {/* General Information - grid-cols-2 for two column layout */}
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div>
             <label htmlFor="client" className="block mb-1">
               Client*
             </label>
-            <select
-              name="clientId"
-              value={quote.clientId}
-              onChange={handleClientChange}
-              className="w-full p-2 border border-gray-300 rounded"
-            >
-              <option value="">Select client</option>
-              {clients.map((client) => (
-                <option key={client.id} value={client.id}>
-                  {client.firstName} {client.lastName}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="quoteNumber" className="block mb-1">
-              Quote #*
-            </label>
             <input
-              name="quoteNumber"
-              value={quote.quoteNumber}
-              onChange={handleInvoiceChanges}
+              name="clientDetails"
+              value={client.firstName + " " + client.lastName}
               className="w-full p-2 border border-gray-300 rounded"
               type="text"
+              readOnly
             />
           </div>
           <div>
+            <label htmlFor="quoteNumber" className="block mb-1">
+              Invoice #*
+            </label>
+            <input
+              name="quoteNumber"
+              value={invoice.quoteNumber}
+              className="w-full p-2 border border-gray-300 rounded"
+              type="text"
+              readOnly
+            />
+          </div>
+
+          <div>
             <label htmlFor="quoteDate" className="block mb-1">
-              Quote Date*
+              Invoice Date*
             </label>
             <input
               type="date"
               name="quoteDate"
-              value={quote.quoteDate.split("T")[0]}
+              value={invoice.quoteDate.split("T")[0]}
               onChange={handleInvoiceChanges}
               className="w-full p-2 border border-gray-300 rounded"
               required
@@ -377,7 +376,7 @@ export default function AddQuotesPage() {
             <input
               type="date"
               name="quoteDueDate"
-              value={quote.quoteDueDate.split("T")[0]}
+              value={invoice.quoteDueDate.split("T")[0]}
               onChange={handleInvoiceChanges}
               className="w-full p-2 border border-gray-300 rounded"
               required
@@ -385,14 +384,16 @@ export default function AddQuotesPage() {
           </div>
         </div>
 
-        <div className="mb-4 grid grid-cols-12 gap-3">
+        {/* Address and Status grid layout (grid-cols-12 for 2 large fields) */}
+        <div className="grid grid-cols-12 gap-4 mb-4">
+          {/* Shipping Address */}
           <div className="col-span-6">
             <label htmlFor="address" className="block mb-1">
               Shipping Address*
             </label>
             <select
               name="shippingAddressId"
-              value={quote.shippingAddressId}
+              value={invoice.shippingAddressId}
               onChange={handleAddressChange}
               className="w-full p-2 border border-gray-300 rounded"
             >
@@ -404,13 +405,15 @@ export default function AddQuotesPage() {
               ))}
             </select>
           </div>
+
+          {/* Status */}
           <div className="col-span-6">
-          <label htmlFor="status" className="block mb-1">
+            <label htmlFor="status" className="block mb-1">
               Status*
             </label>
             <select
               name="status"
-              value={quote.status}
+              value={invoice.status}
               onChange={handleInvoiceChanges}
               className="w-full p-2 border border-gray-300 rounded"
             >
@@ -428,7 +431,7 @@ export default function AddQuotesPage() {
           </label>
           <textarea
             name="notes"
-            value={quote.notes}
+            value={invoice.notes}
             onChange={handleInvoiceChanges}
             className="w-full p-2 border border-gray-300 rounded"
             rows="2"
@@ -436,7 +439,7 @@ export default function AddQuotesPage() {
         </div>
 
         <div>
-          <h3 className="text-xl font-semibold mb-4">Quote Items</h3>
+          <h3 className="text-xl font-semibold mb-4">Invoice Items</h3>
           {quoteItems.map((item, index) => (
             <div
               key={index}
@@ -453,7 +456,7 @@ export default function AddQuotesPage() {
                   onChange={(event) => handleInvoiceItemsChanges(event, index)}
                   className="w-full p-2 border border-gray-300 rounded"
                 >
-                  <option value="">Select product</option>
+                  <option value="">Select a Product</option>
                   {products.map((product) => (
                     <option key={product.id} value={product.id}>
                       {product.productName}
@@ -583,7 +586,7 @@ export default function AddQuotesPage() {
                     type="number"
                     id="discount-input"
                     name="discount"
-                    value={quote.discount}
+                    value={invoice.discount}
                     onChange={handleInvoiceChanges}
                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5"
                     placeholder="Enter discount amount"
@@ -594,9 +597,8 @@ export default function AddQuotesPage() {
                     type="submit"
                     className="bg-blue-600 text-white w-32 h-11 rounded hover:bg-blue-700 transition-colors duration-200"
                   >
-                    Save Quotes
+                    Save Invoice
                   </button>
-
                   <button
                     type="button"
                     className="bg-gray-500 text-white w-32 h-11 rounded hover:bg-gray-600 transition-colors duration-200"
@@ -612,25 +614,25 @@ export default function AddQuotesPage() {
             <div className="col-span-6">
               <div className="bg-white border border-gray-300 rounded-lg p-4 shadow-sm">
                 <h4 className="text-lg font-semibold text-gray-800 mb-3">
-                  Quote Summary
+                  Invoice Summary
                 </h4>
                 <div className="text-gray-700 space-y-2">
                   <div className="flex justify-between">
                     <span className="font-medium">Sub Total:</span>
-                    <span>{quote.subTotal} Rs</span>
+                    <span>{invoice.subTotal} Rs</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="font-medium">Total Tax:</span>
-                    <span>{quote.totalTax} Rs</span>
+                    <span>{invoice.totalTax} Rs</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="font-medium">Discount:</span>
-                    <span>{quote.discount} Rs</span>
+                    <span>{invoice.discount} Rs</span>
                   </div>
                   <hr className="my-2 border-gray-200" />
                   <div className="flex justify-between text-gray-800 font-bold text-lg">
-                    <span>Quote Total:</span>
-                    <span>{quote.total} Rs</span>
+                    <span>Invoice Total:</span>
+                    <span>{invoice.total} Rs</span>
                   </div>
                 </div>
               </div>
@@ -641,3 +643,5 @@ export default function AddQuotesPage() {
     </div>
   );
 }
+
+export default UpdateQuote;
