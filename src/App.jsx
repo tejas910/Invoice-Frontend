@@ -31,9 +31,9 @@ import ExportPage from './pages/invoices/ExportPage';
 import Invoice from './components/Invoice';
 import Quotes from './pages/quotes/Quotes';
 import AddQuotesPage from './pages/quotes/AddQuotesPage';
-import QuotePdf from './components/QuotePdf';
 import UpdateInvoicePage from './pages/invoices/UpdateInvoicePage';
 import UpdateQuote from './pages/quotes/UpdateQuote';
+import SingleQuote from './pages/quotes/components/SingleQuote';
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -73,7 +73,7 @@ function App() {
             <Route path='/profile' element={<Profile/>}/>
             <Route path='/invoice/:invoiceId' element={<Invoice/>}/>
             <Route path='/exportsheet' element={<ExportPage/>}/>
-            <Route path='/quotes/:quotesId' element={<QuotePdf/>}/>
+            <Route path='/quotes/:quotesId' element={<SingleQuote />}/>
             <Route path='/invoice/updateinvoice/:invoiceId' element={<UpdateInvoicePage/>}/>
             <Route path='/quotes/updatequote/:quoteId' element={<UpdateQuote />}/>
           </Route>
