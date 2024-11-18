@@ -6,13 +6,13 @@ import { AddressInfo } from "../../../components/AddressInfo";
 import { InvoiceTable } from "../../../components/InvoiceTable";
 import { Summary } from "./Summary";
 import { Footer } from "../../../components/Footer";
-
+import { usePDF } from 'react-to-pdf';
 function SingleQuote() {
   const { quotesId } = useParams();
   const [quoteData, setQuoteData] = useState({});
   const [loading, setLoading] = useState(true);
   const quoteRef = useRef(); // Reference to the component for PDF generation
-
+  const { toPDF, targetRef } = usePDF({filename: `quote-${quotesId}.pdf`});
   const fetchQuoteData = async (quotesId) => {
     try {
       const response = await axios.get(
@@ -44,8 +44,10 @@ function SingleQuote() {
 
   return (
     <div>
+         <button onClick={()=>toPDF()} className="bg-indigo-500 text-white px-4 py-2 rounded-md mt-2">Download PDF</button>
+
       <div
-        ref={quoteRef}
+        ref={targetRef}
         className="max-w-4xl mx-auto p-8 bg-white shadow-xl rounded-lg"
       >
         <Header quote={quoteData} />

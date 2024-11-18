@@ -6,15 +6,14 @@ import { AddressInfo } from "./AddressInfo";
 import { InvoiceTable } from "./InvoiceTable";
 import { Summary } from "./Summary";
 import { Footer } from "./Footer";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
+import { usePDF } from 'react-to-pdf';
 function Invoice() {
   const { invoiceId } = useParams();
   console.log(invoiceId);
   const [invoiceData, setInvoiceData] = useState({});
   const [loading, setLoading] = useState(true);
-  const invoiceRef = useRef();  // Reference to the component for PDF generation
-
+  // const invoiceRef = useRef();  // Reference to the component for PDF generation
+  const { toPDF, targetRef } = usePDF({filename: 'invoice.pdf'});
   const fetchInvoiceData = async (invoiceId) => {
     try {
       const response = await axios.get(
@@ -33,26 +32,20 @@ function Invoice() {
       console.log(error);
     }
   };
-
   useEffect(() => {
     fetchInvoiceData(invoiceId);
   }, [invoiceId]);
-
   const { invoice } = invoiceData;
-
   // const generatePDF = async () => {
   //   const element = invoiceRef.current;
-  
   //   await html2canvas(element, {
-  //     backgroundColor: "#ffffff",
+  //     backgroundColor: "#FFFFFF",
   //     scale: 2,
   //   }).then(async (canvas) => {
   //     const imgData = canvas.toDataURL("image/png");
   //     const pdf = new jsPDF("p", "mm", "a4");
-  
   //     const pdfWidth = pdf.internal.pageSize.getWidth();
   //     const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-  
   //     // Add logo if it exists
   //     if (invoiceData.invoice.user.companyLogo) {
   //       const logoData = invoiceData.invoice.user.companyLogo;
@@ -61,26 +54,20 @@ function Invoice() {
   //       // Positioning logo at top right corner
   //       pdf.addImage(logoData, "PNG", pdfWidth - logoWidth - 10, 10, logoWidth, logoHeight);
   //     }
-  
   //     // Add content below the logo
   //     const contentYPosition = 40; // Adjust this value based on your layout
   //     pdf.addImage(imgData, "PNG", 10, contentYPosition, pdfWidth - 20, pdfHeight);
-      
   //     // Save the generated PDF
   //     pdf.save(`invoice_${invoiceId}.pdf`);
   //   });
   // };
-  
-
-  
   if (loading) {
     return <h1>Loading...</h1>;
   }
-
   return (
     <div>
-        {/* <button onClick={generatePDF} className="bg-indigo-500 text-white px-4 py-2 rounded-md mt-2">Download PDF</button> */}
-        <div ref={invoiceRef} className="max-w-4xl mx-auto p-8 bg-white shadow-xl rounded-lg">
+        <button onClick={()=>toPDF()} className="bg-indigo-500 text-white px-4 py-2 rounded-md mt-2">Download PDF</button>
+        <div ref={targetRef} className="max-w-4xl mx-auto p-8 bg-white shadow-xl rounded-lg">
             <Header invoice={invoice} />
             <AddressInfo user={invoice.user} client={invoice.client} shippingAddress={invoice.shippingAddress} />
             <InvoiceTable invoiceItems={invoice.invoiceItems} />
@@ -90,5 +77,4 @@ function Invoice() {
     </div>
   );
 }
-
 export default Invoice;
