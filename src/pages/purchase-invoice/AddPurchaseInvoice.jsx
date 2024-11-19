@@ -268,7 +268,7 @@ export default function AddPurchaseInvoice() {
         </div>
 
         <div className="flex justify-between mt-4">
-          <button type="submit" className="bg-green-500 text-white p-1 rounded">Submit Invoice</button>
+          <button type="submit" className="bg-indigo-500 text-white p-2 rounded">Submit Invoice</button>
         </div>
       </form>
     </div>

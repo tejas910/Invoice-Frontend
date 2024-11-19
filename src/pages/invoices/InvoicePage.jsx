@@ -13,7 +13,7 @@ import * as XLSX from "xlsx";
 import axios from "axios";
 import Pagination from "../../common/Pagination"; // Import your Pagination component
 import { toast } from "react-toastify";
-
+import Swal from 'sweetalert2'
 const InvoicePage = () => {
   const [invoices, setInvoices] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -68,22 +68,41 @@ const InvoicePage = () => {
   };
 
   const deleteInvoice = async (id) => {
-    try {
-      const res = await axios.delete(
-        `http://localhost:3000/api/invoices/${id}`,
-        {
-          headers: { Authorization: `Bearer ${accesstoken}` },
+  
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!"
+    }).then(async(result) => {
+      if (result.isConfirmed) {
+        Swal.fire({
+          title: "Deleted!",
+          text: "Your file has been deleted.",
+          icon: "success"
+        });
+        try {
+          const res = await axios.delete(
+            `http://localhost:3000/api/invoices/${id}`,
+            {
+              headers: { Authorization: `Bearer ${accesstoken}` },
+            }
+          );
+          if (res.status === 204) {
+            setStatusUpdate((prev) => !prev);
+            toast.error("Invoice Deleted",{position:"top-right"})
+          }
+        } catch (err) {
+          if (axios.isAxiosError(err)) {
+            console.log(err.response?.data.message);
+          }
         }
-      );
-      if (res.status === 204) {
-        setStatusUpdate((prev) => !prev);
-        toast.error("Invoice Deleted",{position:"top-right"})
       }
-    } catch (err) {
-      if (axios.isAxiosError(err)) {
-        console.log(err.response?.data.message);
-      }
-    }
+    });
+    
   };
 
   const handleSort = (key) => {

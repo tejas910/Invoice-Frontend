@@ -12,7 +12,7 @@ import * as XLSX from "xlsx";
 import axios from "axios";
 import debounce from "lodash.debounce";
 import { toast } from "react-toastify";
-
+import Swal from "sweetalert2";
 export default function Quotes() {
   const [quotes, setQuotes] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -68,19 +68,36 @@ export default function Quotes() {
   }, [searchTerm, dateRange, sortConfig, debouncedFetchQuotes]);
 
   const deleteQuote = async (id) => {
-    try {
-      const res = await axios.delete(`http://localhost:3000/api/quotes/${id}`, {
-        headers: { Authorization: `Bearer ${accesstoken}` },
-      });
-      if (res.status === 204) {
-        toast.error("Quotes Deleted", { position: "top-right" });
-        setQuotes((prev) => prev.filter((quote) => quote.id !== id));
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!"
+    }).then(async(result) => {
+      if (result.isConfirmed) {
+        Swal.fire({
+          title: "Deleted!",
+          text: "Your file has been deleted.",
+          icon: "success"
+        });
+        try {
+          const res = await axios.delete(`http://localhost:3000/api/quotes/${id}`, {
+            headers: { Authorization: `Bearer ${accesstoken}` },
+          });
+          if (res.status === 204) {
+            toast.error("Quotes Deleted", { position: "top-right" });
+            setQuotes((prev) => prev.filter((quote) => quote.id !== id));
+          }
+        } catch (err) {
+          if (axios.isAxiosError(err)) {
+            console.log(err.response?.data.message);
+          }
+        }
       }
-    } catch (err) {
-      if (axios.isAxiosError(err)) {
-        console.log(err.response?.data.message);
-      }
-    }
+    });
   };
 
   const handleSort = (key) => {
@@ -99,6 +116,14 @@ export default function Quotes() {
     XLSX.utils.book_append_sheet(workbook, worksheet, "Quotes");
     XLSX.writeFile(workbook, "quotes.xlsx");
   };
+
+  if (loading)
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500"></div>
+      </div>
+    );
+
 
   return (
     <div className="container mx-auto p-6">

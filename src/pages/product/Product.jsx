@@ -3,7 +3,7 @@ import { Search, Plus, Edit, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-
+import Swal from 'sweetalert2';
 export default function Product() {
   const accesstoken = JSON.parse(localStorage.getItem("accesstoken"));
   
@@ -69,17 +69,36 @@ export default function Product() {
   };
 
   const handleDeleteProduct = async(id) => {
-    try{
-      const res = await axios.delete(`http://localhost:3000/api/products/${id}`, { headers: { Authorization: `Bearer ${accesstoken}` } });
-      if(res.status === 204){
-        toast.error("Product deleted successfully",{position:"top-right"});
-        setStatus(prev => !prev);
+   
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!"
+    }).then(async(result) => {
+      if (result.isConfirmed) {
+        Swal.fire({
+          title: "Deleted!",
+          text: "Your file has been deleted.",
+          icon: "success"
+        });
+        try{
+          const res = await axios.delete(`http://localhost:3000/api/products/${id}`, { headers: { Authorization: `Bearer ${accesstoken}` } });
+          if(res.status === 204){
+            toast.error("Product deleted successfully",{position:"top-right"});
+            setStatus(prev => !prev);
+          }
+        }catch(err){
+          if(axios.isAxiosError(err)){
+            console.log(err.response?.data.message);
+          }
+        }
       }
-    }catch(err){
-      if(axios.isAxiosError(err)){
-        console.log(err.response?.data.message);
-      }
-    }
+    });
+
   };
 
   const handleSort = (criteria) => {
@@ -100,6 +119,14 @@ export default function Product() {
   useEffect(() => {
     fetchProduct();
   }, [status]);
+
+  if (loading)
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500"></div>
+      </div>
+    );
+
 
   return (
     <div className="container mx-auto p-4">
@@ -159,7 +186,7 @@ export default function Product() {
                       </div>
                       <div className="ml-4">
                         <div className="text-sm font-medium text-gray-900">{product.productName}</div>
-                        <div className="text-sm text-gray-500">{product.id}</div>
+                        <div className="text-sm text-gray-500">{product.hsnCode}</div>
                       </div>
                     </div>
                   </td>
