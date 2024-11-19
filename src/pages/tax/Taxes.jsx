@@ -3,7 +3,7 @@ import { Search, Plus, Edit, Trash2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { toast } from 'react-toastify'
-
+import Swal from 'sweetalert2'
 export default function Taxes() {
   const [taxes, setTaxes] = useState([])
   const [loading, setLoading] = useState(false) // Loading state
@@ -29,19 +29,36 @@ export default function Taxes() {
 
   const handleDelete = async (id) => {
     console.log(id)
-    try {
-      const res = await axios.delete(`http://localhost:3000/api/taxes/${id}`, {
-        headers: { Authorization: `Bearer ${accesstoken}` }
-      })
-      if (res.status === 204) {
-        toast.error("Tax Deleted Successfully",{position:"top-right"})
-        setStatus(prev => !prev)
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!"
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        Swal.fire({
+          title: "Deleted!",
+          text: "Your file has been deleted.",
+          icon: "success"
+        });
+        try {
+          const res = await axios.delete(`http://localhost:3000/api/taxes/${id}`, {
+            headers: { Authorization: `Bearer ${accesstoken}` }
+          })
+          if (res.status === 204) {
+            toast.error("Tax Deleted Successfully", { position: "top-right" })
+            setStatus(prev => !prev)
+          }
+        } catch (err) {
+          if (axios.isAxiosError(err)) {
+            console.log(err.response?.data.message)
+          }
+        }
       }
-    } catch (err) {
-      if (axios.isAxiosError(err)) {
-        console.log(err.response?.data.message)
-      }
-    }
+    });
   }
 
   const fetchTaxes = async () => {
@@ -68,6 +85,14 @@ export default function Taxes() {
   useEffect(() => {
     fetchTaxes()
   }, [status])
+
+  if (loading)
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500"></div>
+      </div>
+    );
+
 
   return (
     <div className="p-6 min-h-screen">
@@ -150,9 +175,8 @@ export default function Taxes() {
                   <button
                     key={index + 1}
                     onClick={() => handlePageChange(index + 1)}
-                    className={`px-3 py-1 mx-1 rounded ${
-                      currentPage === index + 1 ? 'bg-blue-500 text-white' : 'bg-gray-200'
-                    }`}
+                    className={`px-3 py-1 mx-1 rounded ${currentPage === index + 1 ? 'bg-blue-500 text-white' : 'bg-gray-200'
+                      }`}
                   >
                     {index + 1}
                   </button>

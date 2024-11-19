@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Search, Plus, Edit, Trash2, ChevronDown, Car } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
+import Swal from 'sweetalert2';
 import { parseISO } from 'date-fns';
 
 
@@ -12,6 +12,7 @@ export default function PurchaseInvoice() {
   const [currentPage, setCurrentPage] = useState(1);
   const [resultsPerPage, setResultsPerPage] = useState(5);
   const [sortOrder, setSortOrder] = useState('asc'); // asc or desc
+  const [loading, setLoading] = useState(false); // Loading state
   const navigate = useNavigate();
 
   const filteredInvoices = invoices
@@ -36,6 +37,7 @@ export default function PurchaseInvoice() {
   };
 
   const fetchPurchaseInvoice = async() =>{
+    setLoading(true); // Start loading
     try{
       const res = await axios.get(`http://localhost:3000/api/purchase-invoices`,{headers:{
         Authorization:`Bearer ${accesstoken}`
@@ -48,6 +50,9 @@ export default function PurchaseInvoice() {
       if(axios.isAxiosError(err)){
         console.log(err.response?.data.message)
       }
+    }
+    finally{
+      setLoading(false); // End loading
     }
   }
 
@@ -65,8 +70,25 @@ export default function PurchaseInvoice() {
   };
 
   const handleDeleteInvoice = (id) => {
-    setInvoices(invoices.filter(invoice => invoice.id !== id));
-    console.log('Delete invoice', id);
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        Swal.fire({
+          title: "Deleted!",
+          text: "Your file has been deleted.",
+          icon: "success"
+        });
+        setInvoices(invoices.filter(invoice => invoice.id !== id));
+        console.log('Delete invoice', id);
+      }
+    });
   };
 
 
@@ -76,6 +98,15 @@ export default function PurchaseInvoice() {
 
 
   const totalPages = Math.ceil(filteredInvoices.length / resultsPerPage);
+
+
+  if (loading)
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500"></div>
+      </div>
+    );
+
 
   return (
     <div className="container mx-auto p-4">

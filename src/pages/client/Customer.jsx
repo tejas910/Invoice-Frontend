@@ -3,7 +3,7 @@ import { Search, Plus, Edit, Trash2, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-
+import Swal from 'sweetalert2';
 export default function Customer() {
   const accesstoken = JSON.parse(localStorage.getItem("accesstoken"));
   const [customers, setCustomers] = useState([]);
@@ -49,24 +49,51 @@ export default function Customer() {
     console.log('Add client clicked');
   };
 
-  const handleDeleteClient = async(id) => {
-    try {
-      const res = await axios.delete(`http://localhost:3000/api/customers/${id}`, { headers: { Authorization: `Bearer ${accesstoken}` } });
-      if (res.status === 204) {
-        toast.error("Customer Deleted Successfully",{position:"top-right"})
-        setStatus(prev => !prev);
+  const handleDeleteClient = async (id) => {
+
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!"
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        Swal.fire({
+          title: "Deleted!",
+          text: "Your file has been deleted.",
+          icon: "success"
+        });
+
+        try {
+          const res = await axios.delete(`http://localhost:3000/api/customers/${id}`, { headers: { Authorization: `Bearer ${accesstoken}` } });
+          if (res.status === 204) {
+            toast.error("Customer Deleted Successfully", { position: "top-right" })
+            setStatus(prev => !prev);
+          }
+        } catch (err) {
+          if (axios.isAxiosError(err)) {
+            console.log(err.response?.data.message);
+          }
+        }
+        console.log('Delete client', id);
       }
-    } catch (err) {
-      if (axios.isAxiosError(err)) {
-        console.log(err.response?.data.message);
-      }
-    }
-    console.log('Delete client', id);
+    });
   };
 
   useEffect(() => {
     fetchClient();
   }, [status]);
+
+  if (loading)
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500"></div>
+      </div>
+    );
+
 
   return (
     <div className="container mx-auto p-4">
@@ -112,7 +139,7 @@ export default function Customer() {
                   <td className="px-6 py-4 whitespace-nowrap cursor-pointer" onClick={() => navigate(`/client/displayclient/${customer.id}`)}>
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-10 w-10">
-                        <img className="h-10 w-10 rounded-full" src={`https://ui-avatars.com/api/?name=${customer.firstName+customer.lastName}&background=random`} alt="" />
+                        <img className="h-10 w-10 rounded-full" src={`https://ui-avatars.com/api/?name=${customer.firstName + customer.lastName}&background=random`} alt="" />
                       </div>
                       <div className="ml-4">
                         <div className="text-sm font-medium text-gray-900">{customer.firstName} {customer.lastName}</div>
